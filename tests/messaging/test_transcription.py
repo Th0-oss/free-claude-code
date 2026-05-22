@@ -10,6 +10,7 @@ from messaging.transcription import (
     MAX_AUDIO_SIZE_BYTES,
     transcribe_audio,
 )
+from providers.nvidia_nim.transcription_backend import NvidiaNimTranscriptionBackend
 
 
 def test_transcribe_file_not_found_raises():
@@ -111,6 +112,24 @@ def test_transcribe_nim_requires_api_key():
                 whisper_device="nvidia_nim",
                 whisper_model="openai/whisper-large-v3",
                 nvidia_nim_api_key="",
+                nim_backend=NvidiaNimTranscriptionBackend(),
+            )
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def test_transcribe_nim_requires_injected_backend():
+    with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as f:
+        f.write(b"fake ogg")
+        path = Path(f.name)
+    try:
+        with pytest.raises(TypeError, match="nim_backend"):
+            transcribe_audio(
+                path,
+                "audio/ogg",
+                whisper_device="nvidia_nim",
+                whisper_model="openai/whisper-large-v3",
+                nvidia_nim_api_key="k",
             )
     finally:
         path.unlink(missing_ok=True)

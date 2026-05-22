@@ -9,10 +9,20 @@ To add a new platform (e.g. Discord, Slack):
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import import_module
+from typing import cast
 
 from loguru import logger
 
+from messaging.voice_backend import TranscriptionBackend
+
 from .base import MessagingPlatform
+
+
+def _default_nim_transcription_backend() -> TranscriptionBackend:
+    """Load NVIDIA NIM transcription without a static ``providers.*`` import (import contracts)."""
+    mod = import_module("providers.nvidia_nim.transcription_backend")
+    return cast(TranscriptionBackend, mod.NvidiaNimTranscriptionBackend())
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +38,7 @@ class MessagingPlatformOptions:
     whisper_device: str = "cpu"
     hf_token: str = ""
     nvidia_nim_api_key: str = ""
+    nim_transcription_backend: TranscriptionBackend | None = None
     messaging_rate_limit: int = 1
     messaging_rate_window: float = 1.0
     log_raw_messaging_content: bool = False
@@ -53,6 +64,8 @@ def create_messaging_platform(
         logger.info("Messaging platform disabled by configuration")
         return None
 
+    nim_backend = opts.nim_transcription_backend or _default_nim_transcription_backend()
+
     if platform_type == "telegram":
         bot_token = opts.telegram_bot_token
         if not bot_token:
@@ -69,6 +82,7 @@ def create_messaging_platform(
             whisper_device=opts.whisper_device,
             hf_token=opts.hf_token,
             nvidia_nim_api_key=opts.nvidia_nim_api_key,
+            nim_backend=nim_backend,
             messaging_rate_limit=opts.messaging_rate_limit,
             messaging_rate_window=opts.messaging_rate_window,
             log_raw_messaging_content=opts.log_raw_messaging_content,
@@ -92,6 +106,7 @@ def create_messaging_platform(
             whisper_device=opts.whisper_device,
             hf_token=opts.hf_token,
             nvidia_nim_api_key=opts.nvidia_nim_api_key,
+            nim_backend=nim_backend,
             messaging_rate_limit=opts.messaging_rate_limit,
             messaging_rate_window=opts.messaging_rate_window,
             log_raw_messaging_content=opts.log_raw_messaging_content,

@@ -13,7 +13,7 @@ from starlette.types import Receive, Scope, Send
 
 from config.logging_config import configure_logging
 from config.paths import server_log_path
-from config.settings import get_settings
+from config.settings import Settings, get_settings
 from core.trace import extract_claude_session_id_from_headers, trace_event
 from providers.exceptions import ProviderError
 
@@ -23,15 +23,56 @@ from .runtime import AppRuntime, startup_failure_message
 from .validation_log import summarize_request_validation_body
 
 
+def runtime_for_app(app: FastAPI, *, settings: Settings | None = None) -> AppRuntime:
+    """Composition root accessor shared by uvicorn-compatible and Starlette lifespan paths."""
+    return AppRuntime.for_app(app, settings=settings or get_settings())
+
+
+async def run_graceful_starlette_lifespan(
+    app: FastAPI, receive: Receive, send: Send
+) -> None:
+    """Handle ``lifespan.*`` ASGI messages with startup failure reporting (no Starlette tracebacks)."""
+    runtime = runtime_for_app(app)
+    settings = runtime.settings
+    startup_complete = False
+    while True:
+        message = await receive()
+        if message["type"] == "lifespan.startup":
+            try:
+                await runtime.startup()
+            except Exception as exc:
+                await send(
+                    {
+                        "type": "lifespan.startup.failed",
+                        "message": startup_failure_message(settings, exc),
+                    }
+                )
+                return
+            startup_complete = True
+            await send({"type": "lifespan.startup.complete"})
+            continue
+
+        if message["type"] == "lifespan.shutdown":
+            if startup_complete:
+                try:
+                    await runtime.shutdown()
+                except Exception as exc:
+                    logger.error("Shutdown failed: exc_type={}", type(exc).__name__)
+                    await send({"type": "lifespan.shutdown.failed", "message": ""})
+                    return
+            await send({"type": "lifespan.shutdown.complete"})
+            return
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    runtime = AppRuntime.for_app(app, settings=get_settings())
-    await runtime.startup()
+    rt = runtime_for_app(app)
+    await rt.startup()
 
     yield
 
-    await runtime.shutdown()
+    await rt.shutdown()
 
 
 class GracefulLifespanApp:
@@ -47,39 +88,7 @@ class GracefulLifespanApp:
         if scope["type"] != "lifespan":
             await self.app(scope, receive, send)
             return
-        await self._lifespan(receive, send)
-
-    async def _lifespan(self, receive: Receive, send: Send) -> None:
-        settings = get_settings()
-        runtime = AppRuntime.for_app(self.app, settings=settings)
-        startup_complete = False
-        while True:
-            message = await receive()
-            if message["type"] == "lifespan.startup":
-                try:
-                    await runtime.startup()
-                except Exception as exc:
-                    await send(
-                        {
-                            "type": "lifespan.startup.failed",
-                            "message": startup_failure_message(settings, exc),
-                        }
-                    )
-                    return
-                startup_complete = True
-                await send({"type": "lifespan.startup.complete"})
-                continue
-
-            if message["type"] == "lifespan.shutdown":
-                if startup_complete:
-                    try:
-                        await runtime.shutdown()
-                    except Exception as exc:
-                        logger.error("Shutdown failed: exc_type={}", type(exc).__name__)
-                        await send({"type": "lifespan.shutdown.failed", "message": ""})
-                        return
-                await send({"type": "lifespan.shutdown.complete"})
-                return
+        await run_graceful_starlette_lifespan(self.app, receive, send)
 
 
 def create_app(*, lifespan_enabled: bool = True) -> FastAPI:

@@ -81,11 +81,8 @@ def test_config_does_not_import_non_config_packages() -> None:
     assert offenders == []
 
 
-_MESSAGING_ALLOWED_PROVIDER_MODULES = frozenset({"providers.nvidia_nim.voice"})
-
-
 def test_messaging_does_not_import_disallowed_modules() -> None:
-    """Messaging is wired by ``api.runtime``; narrow provider imports only for NIM voice ASR."""
+    """Messaging is wired by ``api.runtime``; it must not depend on ``api``/``cli``/``providers``."""
     repo_root = Path(__file__).resolve().parents[2]
     offenders: list[str] = []
     for path in (repo_root / "messaging").rglob("*.py"):
@@ -99,12 +96,8 @@ def test_messaging_does_not_import_disallowed_modules() -> None:
                 or imported.startswith("cli.")
                 or imported == "smoke"
                 or imported.startswith("smoke.")
+                or imported.startswith("providers.")
             ):
-                rel = path.relative_to(repo_root)
-                offenders.append(f"{rel}: {imported}")
-            elif imported.startswith("providers."):
-                if imported in _MESSAGING_ALLOWED_PROVIDER_MODULES:
-                    continue
                 rel = path.relative_to(repo_root)
                 offenders.append(f"{rel}: {imported}")
 
@@ -124,6 +117,22 @@ def test_api_may_only_import_narrow_provider_facade() -> None:
             if imported.startswith("providers."):
                 rel = path.relative_to(repo_root)
                 offenders.append(f"{rel}: {imported}")
+    assert sorted(offenders) == []
+
+
+def test_cli_may_only_import_narrow_api_surface() -> None:
+    """CLI must not deepen coupling beyond ``create_app``/ASGI façade helpers."""
+    repo_root = Path(__file__).resolve().parents[2]
+    allowed_exact = frozenset({"api.app", "api.admin_urls"})
+    offenders: list[str] = []
+    for path in (repo_root / "cli").rglob("*.py"):
+        for imported in _imports_from(path, repo_root):
+            if imported is None or not imported.startswith("api."):
+                continue
+            if imported in allowed_exact:
+                continue
+            rel = path.relative_to(repo_root)
+            offenders.append(f"{rel}: {imported}")
     assert sorted(offenders) == []
 
 

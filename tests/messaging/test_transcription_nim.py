@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from messaging.transcription import transcribe_audio
 
@@ -11,16 +11,17 @@ from messaging.transcription import transcribe_audio
 def test_transcribe_audio_nvidia_nim_forwards_api_key(tmp_path: Path) -> None:
     wav = tmp_path / "stub.wav"
     wav.write_bytes(b"\x00" * 128)
-    with patch("messaging.transcription.transcribe_nvidia_nim_audio") as nim_fn:
-        nim_fn.return_value = "ok"
-        out = transcribe_audio(
-            wav,
-            "audio/wav",
-            whisper_model="openai/whisper-large-v3",
-            whisper_device="nvidia_nim",
-            nvidia_nim_api_key="test-nim-key",
-        )
-    nim_fn.assert_called_once_with(
+    backend = MagicMock()
+    backend.transcribe_audio_file.return_value = "ok"
+    out = transcribe_audio(
+        wav,
+        "audio/wav",
+        whisper_model="openai/whisper-large-v3",
+        whisper_device="nvidia_nim",
+        nvidia_nim_api_key="test-nim-key",
+        nim_backend=backend,
+    )
+    backend.transcribe_audio_file.assert_called_once_with(
         wav, "openai/whisper-large-v3", api_key="test-nim-key"
     )
     assert out == "ok"

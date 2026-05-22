@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from messaging.transcription import transcribe_audio
+from providers.nvidia_nim.transcription_backend import NvidiaNimTranscriptionBackend
 from smoke.lib.config import SmokeConfig
 
 pytestmark = [pytest.mark.live, pytest.mark.smoke_target("voice")]
@@ -24,13 +25,24 @@ def test_voice_transcription_backend_when_explicitly_enabled(
     wav_path = tmp_path / "smoke-tone.wav"
     _write_tone_wav(wav_path)
     try:
-        t_kw: dict[str, str] = {
-            "whisper_model": smoke_config.settings.whisper_model,
-            "whisper_device": smoke_config.settings.whisper_device,
-        }
+        w_model = smoke_config.settings.whisper_model
+        w_device = smoke_config.settings.whisper_device
         if smoke_config.settings.whisper_device == "nvidia_nim":
-            t_kw["nvidia_nim_api_key"] = smoke_config.settings.nvidia_nim_api_key
-        text = transcribe_audio(wav_path, "audio/wav", **t_kw)
+            text = transcribe_audio(
+                wav_path,
+                "audio/wav",
+                whisper_model=w_model,
+                whisper_device=w_device,
+                nvidia_nim_api_key=smoke_config.settings.nvidia_nim_api_key,
+                nim_backend=NvidiaNimTranscriptionBackend(),
+            )
+        else:
+            text = transcribe_audio(
+                wav_path,
+                "audio/wav",
+                whisper_model=w_model,
+                whisper_device=w_device,
+            )
     except ImportError as exc:
         pytest.skip(str(exc))
     assert isinstance(text, str)

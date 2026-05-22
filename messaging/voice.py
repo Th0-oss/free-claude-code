@@ -5,6 +5,10 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+from messaging.transcription import transcribe_audio
+
+from .voice_backend import TranscriptionBackend
+
 
 class PendingVoiceRegistry:
     """Track voice notes that are still waiting on transcription."""
@@ -51,9 +55,11 @@ class VoiceTranscriptionService:
         *,
         hf_token: str = "",
         nvidia_nim_api_key: str = "",
+        nim_backend: TranscriptionBackend | None = None,
     ) -> None:
         self._hf_token = hf_token
         self._nvidia_nim_api_key = nvidia_nim_api_key
+        self._nim_backend = nim_backend
 
     async def transcribe(
         self,
@@ -63,8 +69,6 @@ class VoiceTranscriptionService:
         whisper_model: str,
         whisper_device: str,
     ) -> str:
-        from .transcription import transcribe_audio
-
         return await asyncio.to_thread(
             transcribe_audio,
             file_path,
@@ -73,4 +77,5 @@ class VoiceTranscriptionService:
             whisper_device=whisper_device,
             hf_token=self._hf_token,
             nvidia_nim_api_key=self._nvidia_nim_api_key,
+            nim_backend=self._nim_backend,
         )

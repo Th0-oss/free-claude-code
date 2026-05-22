@@ -46,6 +46,40 @@ class TestSettings:
         assert settings.debug_platform_edits is False
         assert settings.debug_subagent_stack is False
 
+    def test_web_fetch_bundle_reflects_flat_settings(self, monkeypatch):
+        from config.settings import Settings
+
+        monkeypatch.setitem(Settings.model_config, "env_file", ())
+        monkeypatch.setenv("ENABLE_WEB_SERVER_TOOLS", "true")
+        monkeypatch.setenv("WEB_FETCH_ALLOWED_SCHEMES", "http,Https")
+        monkeypatch.setenv("WEB_FETCH_ALLOW_PRIVATE_NETWORKS", "true")
+
+        settings = Settings()
+        bundle = settings.web_fetch_bundle
+
+        assert bundle.enable_web_server_tools is settings.enable_web_server_tools
+        assert bundle.web_fetch_allow_private_networks is (
+            settings.web_fetch_allow_private_networks
+        )
+        assert bundle.web_fetch_allowed_schemes == "http,https"
+        assert settings.web_fetch_allowed_scheme_set() == frozenset({"http", "https"})
+
+    def test_observability_bundle_reflects_flat_settings(self, monkeypatch):
+        from config.settings import Settings
+
+        monkeypatch.setitem(Settings.model_config, "env_file", ())
+        monkeypatch.setenv("LOG_RAW_API_PAYLOADS", "true")
+        monkeypatch.setenv("LOG_RAW_CLI_DIAGNOSTICS", "true")
+        monkeypatch.setenv("DEBUG_SUBAGENT_STACK", "true")
+
+        settings = Settings()
+        bundle = settings.observability_bundle
+
+        assert bundle.log_raw_api_payloads is settings.log_raw_api_payloads
+        assert bundle.log_raw_cli_diagnostics is settings.log_raw_cli_diagnostics
+        assert bundle.debug_subagent_stack is settings.debug_subagent_stack
+        assert bundle.log_raw_sse_events is settings.log_raw_sse_events
+
     def test_default_claude_workspace_uses_fcc_home(self, monkeypatch, tmp_path):
         """Unset CLAUDE_WORKSPACE stores agent data under ~/.fcc."""
         from config.settings import Settings

@@ -8,7 +8,7 @@ from messaging.platforms.telegram import TelegramPlatform
 
 @pytest.fixture
 def telegram_platform():
-    with patch("messaging.platforms.telegram.TELEGRAM_AVAILABLE", True):
+    with patch("messaging.platforms.telegram.platform.TELEGRAM_AVAILABLE", True):
         platform = TelegramPlatform(bot_token="test_token", allowed_user_id="12345")
         return platform
 

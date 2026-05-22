@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from messaging.transcription import transcribe_audio
+from providers.nvidia_nim.transcription_backend import NvidiaNimTranscriptionBackend
 from smoke.lib.config import SmokeConfig
 from smoke.lib.e2e import VoiceFixtureDriver
 
@@ -56,6 +57,7 @@ def test_voice_nim_backend_e2e(smoke_config: SmokeConfig, tmp_path: Path) -> Non
         whisper_model=smoke_config.settings.whisper_model,
         whisper_device="nvidia_nim",
         nvidia_nim_api_key=smoke_config.settings.nvidia_nim_api_key,
+        nim_backend=NvidiaNimTranscriptionBackend(),
     )
 
     assert isinstance(text, str)

@@ -12,14 +12,14 @@ from messaging.platforms.telegram import TelegramPlatform
 
 @pytest.fixture
 def telegram_platform():
-    with patch("messaging.platforms.telegram.TELEGRAM_AVAILABLE", True):
+    with patch("messaging.platforms.telegram.platform.TELEGRAM_AVAILABLE", True):
         return TelegramPlatform(bot_token="test_token", allowed_user_id="12345")
 
 
 @pytest.mark.asyncio
 async def test_telegram_voice_disabled_sends_reply():
     """When voice_note_enabled is False, reply with disabled message."""
-    with patch("messaging.platforms.telegram.TELEGRAM_AVAILABLE", True):
+    with patch("messaging.platforms.telegram.platform.TELEGRAM_AVAILABLE", True):
         telegram_platform = TelegramPlatform(
             bot_token="test_token",
             allowed_user_id="12345",
@@ -83,7 +83,7 @@ async def test_telegram_voice_success_invokes_handler(telegram_platform):
         mock_queue_send = AsyncMock(return_value="999")
         with (
             patch(
-                "messaging.transcription.transcribe_audio",
+                "messaging.voice.transcribe_audio",
                 return_value="Hello from voice",
             ),
             patch.object(

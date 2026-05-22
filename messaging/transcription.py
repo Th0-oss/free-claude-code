@@ -10,11 +10,8 @@ from typing import Any
 
 from loguru import logger
 
-from providers.nvidia_nim.voice import (
-    transcribe_audio_file as transcribe_nvidia_nim_audio,
-)
+from messaging.voice_backend import TranscriptionBackend
 
-# Max file size in bytes (25 MB)
 MAX_AUDIO_SIZE_BYTES = 25 * 1024 * 1024
 
 # Short model names -> full Hugging Face model IDs (for local Whisper)
@@ -91,6 +88,7 @@ def transcribe_audio(
     whisper_device: str = "cpu",
     hf_token: str = "",
     nvidia_nim_api_key: str = "",
+    nim_backend: TranscriptionBackend | None = None,
 ) -> str:
     """
     Transcribe audio file to text.
@@ -104,6 +102,7 @@ def transcribe_audio(
         mime_type: MIME type of the audio (e.g. "audio/ogg")
         whisper_model: Model ID or short name (local) or NVIDIA NIM model
         whisper_device: "cpu" | "cuda" | "nvidia_nim"
+        nim_backend: Required when whisper_device is ``nvidia_nim`` (wired from runtime).
 
     Returns:
         Transcribed text
@@ -124,8 +123,15 @@ def transcribe_audio(
         )
 
     if whisper_device == "nvidia_nim":
-        return transcribe_nvidia_nim_audio(
-            file_path, whisper_model, api_key=nvidia_nim_api_key
+        if nim_backend is None:
+            raise TypeError(
+                "nim_backend is required when whisper_device is 'nvidia_nim' "
+                "(inject messaging.voice_backend.TranscriptionBackend from api.runtime)."
+            )
+        return nim_backend.transcribe_audio_file(
+            file_path,
+            whisper_model,
+            api_key=nvidia_nim_api_key,
         )
     return _transcribe_local(
         file_path, whisper_model, whisper_device, hf_token=hf_token

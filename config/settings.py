@@ -14,9 +14,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from .constants import HTTP_CONNECT_TIMEOUT_DEFAULT
 from .messaging_settings import MessagingSettings
 from .nim import NimSettings
+from .observability_settings import ObservabilitySettings
 from .paths import default_claude_workspace_path, managed_env_path
 from .provider_ids import SUPPORTED_PROVIDER_IDS
 from .server_runtime_settings import ProviderThroughputSettings, ServerRuntimeSettings
+from .web_fetch_settings import WebFetchSettings, normalize_web_fetch_allowed_schemes
 
 
 @dataclass(frozen=True, slots=True)
@@ -397,15 +399,7 @@ class Settings(BaseSettings):
     @field_validator("web_fetch_allowed_schemes")
     @classmethod
     def validate_web_fetch_allowed_schemes(cls, v: str) -> str:
-        schemes = [part.strip().lower() for part in v.split(",") if part.strip()]
-        if not schemes:
-            raise ValueError("web_fetch_allowed_schemes must list at least one scheme")
-        for scheme in schemes:
-            if not scheme.isascii() or not scheme.isalpha():
-                raise ValueError(
-                    f"Invalid URL scheme in web_fetch_allowed_schemes: {scheme!r}"
-                )
-        return ",".join(schemes)
+        return normalize_web_fetch_allowed_schemes(v)
 
     @field_validator("ollama_base_url")
     @classmethod
@@ -523,10 +517,29 @@ class Settings(BaseSettings):
 
     def web_fetch_allowed_scheme_set(self) -> frozenset[str]:
         """Return normalized schemes allowed for web_fetch."""
-        return frozenset(
-            part.strip().lower()
-            for part in self.web_fetch_allowed_schemes.split(",")
-            if part.strip()
+        return self.web_fetch_bundle.allowed_scheme_set()
+
+    @property
+    def web_fetch_bundle(self) -> WebFetchSettings:
+        """Grouped web_fetch / web_search guard settings."""
+        return WebFetchSettings(
+            enable_web_server_tools=self.enable_web_server_tools,
+            web_fetch_allowed_schemes=self.web_fetch_allowed_schemes,
+            web_fetch_allow_private_networks=self.web_fetch_allow_private_networks,
+        )
+
+    @property
+    def observability_bundle(self) -> ObservabilitySettings:
+        """Bundled verbosity and debug logging flags."""
+        return ObservabilitySettings(
+            log_raw_api_payloads=self.log_raw_api_payloads,
+            log_raw_sse_events=self.log_raw_sse_events,
+            log_api_error_tracebacks=self.log_api_error_tracebacks,
+            log_raw_messaging_content=self.log_raw_messaging_content,
+            log_raw_cli_diagnostics=self.log_raw_cli_diagnostics,
+            log_messaging_error_details=self.log_messaging_error_details,
+            debug_platform_edits=self.debug_platform_edits,
+            debug_subagent_stack=self.debug_subagent_stack,
         )
 
     @computed_field

@@ -1,6 +1,6 @@
 """Tests for messaging platform factory."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from messaging.platforms.factory import (
     MessagingPlatformOptions,
@@ -15,7 +15,7 @@ class TestCreateMessagingPlatform:
         """Create Telegram platform when bot_token is provided."""
         mock_platform = MagicMock()
         with (
-            patch("messaging.platforms.telegram.TELEGRAM_AVAILABLE", True),
+            patch("messaging.platforms.telegram.platform.TELEGRAM_AVAILABLE", True),
             patch(
                 "messaging.platforms.telegram.TelegramPlatform",
                 return_value=mock_platform,
@@ -41,6 +41,7 @@ class TestCreateMessagingPlatform:
             whisper_device="cuda",
             hf_token="",
             nvidia_nim_api_key="",
+            nim_backend=ANY,
             messaging_rate_limit=1,
             messaging_rate_window=1.0,
             log_raw_messaging_content=False,
@@ -90,6 +91,7 @@ class TestCreateMessagingPlatform:
             whisper_device="nvidia_nim",
             hf_token="",
             nvidia_nim_api_key="",
+            nim_backend=ANY,
             messaging_rate_limit=1,
             messaging_rate_window=1.0,
             log_raw_messaging_content=False,

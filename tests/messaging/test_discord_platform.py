@@ -17,11 +17,11 @@ class TestGetDiscord:
     """Tests for _get_discord helper."""
 
     def test_raises_when_discord_not_available(self):
-        import messaging.platforms.discord as discord_mod
+        import messaging.platforms.discord.constants as discord_constants
 
         with (
-            patch.object(discord_mod, "DISCORD_AVAILABLE", False),
-            patch.object(discord_mod, "_discord_module", None),
+            patch.object(discord_constants, "DISCORD_AVAILABLE", False),
+            patch.object(discord_constants, "_discord_module", None),
             pytest.raises(ImportError, match=r"discord\.py is required"),
         ):
             _get_discord()
