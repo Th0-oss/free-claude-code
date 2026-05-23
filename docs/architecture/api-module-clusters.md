@@ -5,7 +5,7 @@
 | Cluster | Typical modules today | Guidance |
 |---------|-----------------------|----------|
 | **Ingress / resolver** | [`api/ingress/`](../../../api/ingress/), [`api/dependencies.py`](../../../api/dependencies.py) | Prefer [`resolve_provider`](../../../api/dependencies.py) + handlers under `api/ingress/`; extend [`ingress/errors.py`](../../../api/ingress/errors.py) for resolver-shaped failures only. |
-| **Runtime / lifespan** | [`api/runtime.py`](../../../api/runtime.py), [`api/runtime_lifecycle.py`](../../../api/runtime_lifecycle.py), [`api/messaging_startup.py`](../../../api/messaging_startup.py) | Composition-only: provider registry, telemetry, messaging stack start; minimal business logic here. |
+| **Runtime / lifespan** | [`api/runtime.py`](../../../api/runtime.py), [`api/runtime_lifecycle.py`](../../../api/runtime_lifecycle.py), [`api/messaging_voice.py`](../../../api/messaging_voice.py), [`api/messaging_startup.py`](../../../api/messaging_startup.py) | Composition-only: provider registry, telemetry, messaging bootstrap (voice shim + stack start); minimal business logic here. |
 | **Admin env + persistence** | `api/admin_env_*.py`, [`admin_persistence.py`](../../../api/admin_persistence.py) | Keep read/write symmetry; façade paths stay documented in [`admin.md`](admin.md). |
 | **Trace / OTLP shim** | [`trace_sink.py`](../../../api/trace_sink.py), [`telemetry_otlp.py`](../../../api/telemetry_otlp.py) | Optional extras only; OTLP deps stay lazily isolated. |
 

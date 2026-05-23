@@ -28,17 +28,31 @@ def _create_deepseek(config: ProviderConfig, _settings: Settings) -> BaseProvide
     return DeepSeekProvider(config)
 
 
-def _instantiate_catalog_thin_native_messages(
-    provider_id: str, config: ProviderConfig, _settings: Settings
-) -> BaseProvider:
-    """Build thin catalog shells (LM Studio, llama.cpp) sharing one implementation."""
-    from providers.llamacpp import LlamaCppProvider
+def _thin_native_lmstudio(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     from providers.lmstudio import LMStudioProvider
 
-    if provider_id == "lmstudio":
-        return LMStudioProvider(config)
-    if provider_id == "llamacpp":
-        return LlamaCppProvider(config)
+    return LMStudioProvider(config)
+
+
+def _thin_native_llamacpp(config: ProviderConfig, _settings: Settings) -> BaseProvider:
+    from providers.llamacpp import LlamaCppProvider
+
+    return LlamaCppProvider(config)
+
+
+_CATALOG_THIN_NATIVE_BY_ID: dict[str, ProviderFactory] = {
+    "lmstudio": _thin_native_lmstudio,
+    "llamacpp": _thin_native_llamacpp,
+}
+
+
+def _instantiate_catalog_thin_native_messages(
+    provider_id: str, config: ProviderConfig, settings: Settings
+) -> BaseProvider:
+    """Build thin catalog shells (LM Studio, llama.cpp) sharing one implementation."""
+    maker = _CATALOG_THIN_NATIVE_BY_ID.get(provider_id)
+    if maker is not None:
+        return maker(config, settings)
     msg = f"unsupported thin native catalog id: {provider_id!r}"
     raise AssertionError(msg)
 

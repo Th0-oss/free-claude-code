@@ -4,6 +4,8 @@ import ast
 from pathlib import Path
 
 # `api` may only import this narrow ``providers`` surface (see AGENTS.md).
+# NVIDIA NIM ASR shim for messaging is constrained to [`api.messaging_voice`](../../api/messaging_voice.py).
+_NIM_TRANSCRIPTION_BACKEND = "providers.nvidia_nim.transcription_backend"
 _API_ALLOWED_PROVIDER_MODULES = frozenset(
     {
         "providers",
@@ -11,10 +13,9 @@ _API_ALLOWED_PROVIDER_MODULES = frozenset(
         "providers.exceptions",
         "providers.registry",
         "providers.rate_limit",
-        # AppRuntime constructs NIM ASR shim for Telegram/Discord (composition root).
-        "providers.nvidia_nim.transcription_backend",
     }
 )
+_ALLOWED_NIM_TRANSCRIPTION_BACKEND_PATHS = frozenset({"api/messaging_voice.py"})
 
 
 def test_api_and_messaging_do_not_import_provider_common() -> None:
@@ -113,13 +114,19 @@ def test_api_may_only_import_narrow_provider_facade() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     offenders: list[str] = []
     for path in (repo_root / "api").rglob("*.py"):
+        rel = path.relative_to(repo_root)
+        rel_posix = rel.as_posix()
         for imported in _imports_from(path, repo_root):
             if imported is None or not imported.startswith("providers"):
+                continue
+            if imported == _NIM_TRANSCRIPTION_BACKEND:
+                if rel_posix in _ALLOWED_NIM_TRANSCRIPTION_BACKEND_PATHS:
+                    continue
+                offenders.append(f"{rel}: {imported}")
                 continue
             if imported in _API_ALLOWED_PROVIDER_MODULES:
                 continue
             if imported.startswith("providers."):
-                rel = path.relative_to(repo_root)
                 offenders.append(f"{rel}: {imported}")
     assert sorted(offenders) == []
 

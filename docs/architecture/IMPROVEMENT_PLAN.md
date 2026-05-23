@@ -338,7 +338,7 @@ Only set for eligible `openai_chat` entries.
 
 ### 4.2 NIM transcription boundary
 
-Only `messaging/bootstrap.py` imports `providers.nvidia_nim.transcription_backend`. Update `_API_ALLOWED_PROVIDER_MODULES` in contract tests if `api/runtime.py` no longer imports it.
+Only [`api/messaging_voice.py`](../../api/messaging_voice.py) imports `providers.nvidia_nim.transcription_backend` under `api/`. [`messaging/bootstrap.py`](../../messaging/bootstrap.py) receives the injected `TranscriptionBackend` from that composition helper. Contract tests narrow this via **`test_import_boundaries`** (**`api/messaging_voice.py`** allowlist entry).
 
 ### 4.3 Tests
 

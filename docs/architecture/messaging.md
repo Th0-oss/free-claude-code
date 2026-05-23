@@ -22,7 +22,7 @@ Do **not** import `cli` from `messaging` ([`messaging_startup.py`](../../api/mes
 
 | Stage | Module | Role |
 |-------|--------|------|
-| Settings → platform selection | [`messaging/bootstrap.py`](../../messaging/bootstrap.py) | Maps `Settings` to [`MessagingPlatformOptions`](../../messaging/platforms/factory.py); **`nim_transcription_backend` is injected by [`api/runtime.py`](../../api/runtime.py)** (composition root). |
+| Settings → platform selection | [`messaging/bootstrap.py`](../../messaging/bootstrap.py) | Maps `Settings` to [`MessagingPlatformOptions`](../../messaging/platforms/factory.py); **`nim_transcription_backend` is injected by [`api/messaging_voice.py`](../../api/messaging_voice.py)** via [`bootstrap_optional_messaging_platform`](../../api/messaging_voice.py) (called from **`api.runtime`**). |
 | Session/handler/stack | [`api/messaging_startup.py`](../../api/messaging_startup.py) | Builds `CLISessionManager`, `SessionStore`, `ClaudeMessageHandler`; calls `platform.start()`. |
 
 **HTTP entry:** Orchestration stays in **`api.runtime.AppRuntime`** ([`api/runtime.py`](../../api/runtime.py)); see also [`docs/architecture/api-package.md`](api-package.md) for parity with gateway layout.

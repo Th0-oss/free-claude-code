@@ -10,6 +10,7 @@ Orchestration and HTTP-facing code for the Claude-compatible gateway lives under
 | [`api/message_create_pipeline.py`](../../api/message_create_pipeline.py) | Ordered steps for **`POST /v1/messages`**: optimizations, web tools branch, upstream streaming. Preserve precedence when extending. Optional façade [`api/pipeline/__init__.py`](../../api/pipeline/__init__.py) re-exports identical symbols for navigation-only imports. |
 | [`api/services.py`](../../api/services.py) | `ClaudeProxyService` façade (`create_message`, `count_tokens`). |
 | [`api/runtime.py`](../../api/runtime.py) | `AppRuntime` lifecycle: startup/shutdown ordering, registering `provider_registry` on `app.state`. |
+| [`api/messaging_voice.py`](../../api/messaging_voice.py) | Optional Telegram/Discord composition: injects **`NvidiaNimTranscriptionBackend`** into [`messaging/bootstrap.py`](../../messaging/bootstrap.py) (`create_optional_messaging_platform`). Sole `api/` entry that imports **`providers.nvidia_nim.transcription_backend`**. |
 | [`api/messaging_startup.py`](../../api/messaging_startup.py) | Messaging stack wired **after** platform bootstrap from `messaging`: CLI session manager, handler, `platform.start()`. Keeps [`messaging/bootstrap.py`](../../messaging/bootstrap.py) free of `cli` imports (import contract). |
 | [`api/dependencies.py`](../../api/dependencies.py) | `resolve_provider`, process-cache helpers, `require_api_key`, `get_settings`. |
 | [`api/ingress/errors.py`](../../api/ingress/errors.py) (+ stable shim [`api/ingress_errors.py`](../../api/ingress_errors.py)) | Ingress domain errors (resolution + gateway proxy auth) mapped to `{"detail": ...}` by [`api/ingress/handlers.py`](../../api/ingress/handlers.py) (shim [`api/ingress_handlers.py`](../../api/ingress_handlers.py)). |
@@ -42,7 +43,7 @@ Admin, web tools, and optimizations branch **before** ``message_create_pipeline`
 
 - From route handlers call `resolve_provider(..., app=request.app, settings=settings)` via [`dependencies.resolve_provider`](../../api/dependencies.py). The registry must exist on **`app.state.provider_registry`** after [`AppRuntime.startup`](../../api/runtime.py).
 
-- Scripts, smoke, and isolated unit scenarios **without** a Starlette app use **`get_process_cached_provider*`** via [`dependencies`](../../api/dependencies.py) (backed by [`api.provider_process_cache`](../../api/provider_process_cache.py)). Do **not** use those helpers from **`api.routes`** / **`api.services`**; do **not** import `PROCESS_PROVIDERS` or **`api.provider_process_cache`** elsewhere under `api/` (contract: [`test_http_provider_resolution_contracts.py`](../../tests/contracts/test_http_provider_resolution_contracts.py)).
+- Scripts, smoke, and isolated unit scenarios **without** a Starlette app use **`get_process_cached_provider*`** via [`dependencies`](../../api/dependencies.py) (backed by [`api.provider_process_cache`](../../api/provider_process_cache.py)). Do **not** use those helpers from **`api.routes`** / **`api.services`**; do **not** import `PROCESS_PROVIDERS` or **`api.provider_process_cache`** elsewhere under `api/` (AST import checks plus substring mentions: [`test_http_provider_resolution_contracts.py`](../../tests/contracts/test_http_provider_resolution_contracts.py)).
 
 See also [layers.md — Provider resolution](layers.md).
 

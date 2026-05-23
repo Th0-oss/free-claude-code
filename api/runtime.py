@@ -153,14 +153,10 @@ class AppRuntime:
 
     async def _start_messaging_if_configured(self) -> None:
         try:
-            from messaging.bootstrap import create_optional_messaging_platform
-            from providers.nvidia_nim.transcription_backend import (
-                NvidiaNimTranscriptionBackend,
-            )
+            from api.messaging_voice import bootstrap_optional_messaging_platform
 
-            self.messaging_platform = create_optional_messaging_platform(
-                self.settings,
-                nim_transcription_backend=NvidiaNimTranscriptionBackend(),
+            self.messaging_platform = bootstrap_optional_messaging_platform(
+                self.settings
             )
 
             if self.messaging_platform:
