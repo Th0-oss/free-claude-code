@@ -22,3 +22,7 @@ This repo is a layered Python layout. **Imports are enforced by** `tests/contrac
 3. After admin **Apply** or CLI init touching env: call `reload_settings()` from `config.settings` so cached settings refresh.
 
 Shared Anthropic shaping belongs in **`core/anthropic`**, not in cross-importing provider `request.py` modules.
+
+## Logging stacks
+
+**`loguru`** is the primary structured logger (TRACE events, request correlation). The server also uses the stdlib **`logging`** package for the uvicorn **Admin UI** banner line so it appears on the same stream uvicorn owns; this split is intentional rather than wiring loguru into uvicorn internals.

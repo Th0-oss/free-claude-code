@@ -312,8 +312,8 @@ def test_app_lifespan_sets_state_and_cleans_up(tmp_path, messaging_enabled):
             "messaging.bootstrap.create_messaging_platform",
             return_value=fake_platform if messaging_enabled else None,
         ) as create_platform,
-        patch("messaging.session.SessionStore", return_value=session_store),
-        patch("cli.manager.CLISessionManager", return_value=cli_manager),
+        patch("api.messaging_startup.SessionStore", return_value=session_store),
+        patch("api.messaging_startup.CLISessionManager", return_value=cli_manager),
         patch(
             "messaging.trees.queue_manager.TreeQueueManager.from_dict",
             return_value=fake_queue,
@@ -382,8 +382,8 @@ def test_app_lifespan_cleanup_continues_if_platform_stop_raises(tmp_path):
             "messaging.bootstrap.create_messaging_platform",
             return_value=fake_platform,
         ),
-        patch("messaging.session.SessionStore", return_value=session_store),
-        patch("cli.manager.CLISessionManager", return_value=cli_manager),
+        patch("api.messaging_startup.SessionStore", return_value=session_store),
+        patch("api.messaging_startup.CLISessionManager", return_value=cli_manager),
         TestClient(app),
     ):
         pass
@@ -559,8 +559,8 @@ def test_app_lifespan_platform_start_exception_cleanup_still_runs(tmp_path):
             "messaging.bootstrap.create_messaging_platform",
             return_value=fake_platform,
         ),
-        patch("messaging.session.SessionStore", return_value=session_store),
-        patch("cli.manager.CLISessionManager", return_value=cli_manager),
+        patch("api.messaging_startup.SessionStore", return_value=session_store),
+        patch("api.messaging_startup.CLISessionManager", return_value=cli_manager),
         TestClient(app),
     ):
         pass
@@ -610,8 +610,8 @@ def test_app_lifespan_flush_pending_save_exception_warning_only(tmp_path):
             "messaging.bootstrap.create_messaging_platform",
             return_value=fake_platform,
         ),
-        patch("messaging.session.SessionStore", return_value=session_store),
-        patch("cli.manager.CLISessionManager", return_value=cli_manager),
+        patch("api.messaging_startup.SessionStore", return_value=session_store),
+        patch("api.messaging_startup.CLISessionManager", return_value=cli_manager),
         TestClient(app),
     ):
         pass

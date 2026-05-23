@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable, MutableMapping
 from contextlib import suppress
+from functools import partial
 
 from loguru import logger
 
@@ -65,45 +66,61 @@ def _create_ollama(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     return OllamaProvider(config)
 
 
-def _create_kimi(config: ProviderConfig, _settings: Settings) -> BaseProvider:
-    from providers.kimi import KimiProvider
-
-    return KimiProvider(config)
-
-
 def _create_wafer(config: ProviderConfig, _settings: Settings) -> BaseProvider:
     from providers.wafer import WaferProvider
 
     return WaferProvider(config)
 
 
-def _create_opencode(config: ProviderConfig, _settings: Settings) -> BaseProvider:
-    from providers.opencode import OpenCodeProvider
+def _instantiate_catalog_openai_chat(
+    provider_id: str, config: ProviderConfig, _settings: Settings
+) -> BaseProvider:
+    """Construct catalog-backed OpenAI chat providers (see ``openai_request_module``)."""
+    if provider_id == "opencode_go":
+        from providers.opencode import OpenCodeProvider
 
-    return OpenCodeProvider(config)
+        return OpenCodeProvider(config, provider_name="OPENCODE_GO")
+    if provider_id == "opencode":
+        from providers.opencode import OpenCodeProvider
+
+        return OpenCodeProvider(config)
+    if provider_id == "kimi":
+        from providers.kimi import KimiProvider
+
+        return KimiProvider(config)
+    if provider_id == "fireworks":
+        from providers.fireworks import FireworksProvider
+
+        return FireworksProvider(config)
+    if provider_id == "zai":
+        from providers.zai import ZaiProvider
+
+        return ZaiProvider(config)
+    from providers.openai_chat_adapter import CatalogOpenAIChatProvider
+
+    return CatalogOpenAIChatProvider(provider_id, config)
 
 
-def _create_opencode_go(config: ProviderConfig, _settings: Settings) -> BaseProvider:
-    from providers.opencode import OpenCodeProvider
-
-    return OpenCodeProvider(config, provider_name="OPENCODE_GO")
-
-
-def _create_zai(config: ProviderConfig, _settings: Settings) -> BaseProvider:
-    from providers.zai import ZaiProvider
-
-    return ZaiProvider(config)
-
-
-def _create_fireworks(config: ProviderConfig, _settings: Settings) -> BaseProvider:
-    from providers.fireworks import FireworksProvider
-
-    return FireworksProvider(config)
+def _create_catalog_openai_chat(
+    _config: ProviderConfig, _settings: Settings
+) -> BaseProvider:
+    """Catalog marker; per-id factories use :func:`_instantiate_catalog_openai_chat`."""
+    raise AssertionError(
+        "OpenAI catalog providers must bind via functools.partial(_instantiate_catalog_openai_chat, pid)"
+    )
 
 
 _MOD = globals()
 PROVIDER_FACTORIES: dict[str, ProviderFactory] = {}
 for pid, desc in PROVIDER_CATALOG.items():
+    if desc.openai_request_module is not None:
+        if desc.transport_type != "openai_chat":
+            raise AssertionError(
+                f"provider {pid!r}: openai_request_module requires transport_type "
+                f"'openai_chat', got {desc.transport_type!r}"
+            )
+        PROVIDER_FACTORIES[pid] = partial(_instantiate_catalog_openai_chat, pid)
+        continue
     try:
         factory_fn = _MOD[desc.registry_factory]
     except KeyError as exc:

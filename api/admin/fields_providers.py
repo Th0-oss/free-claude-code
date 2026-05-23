@@ -1,79 +1,9 @@
-"""Admin fields: providers."""
+"""Admin fields: providers (non-catalog defaults: URLs, proxies)."""
 
+from api.admin.fields_providers_catalog import catalog_credential_field_specs
 from api.admin.manifest_types import ConfigFieldSpec
 
-FIELDS: tuple[ConfigFieldSpec, ...] = (
-    ConfigFieldSpec(
-        "NVIDIA_NIM_API_KEY",
-        "NVIDIA NIM API Key",
-        "providers",
-        "secret",
-        settings_attr="nvidia_nim_api_key",
-        secret=True,
-        description="Used by NVIDIA NIM chat and optional NIM voice transcription.",
-    ),
-    ConfigFieldSpec(
-        "OPENROUTER_API_KEY",
-        "OpenRouter API Key",
-        "providers",
-        "secret",
-        settings_attr="open_router_api_key",
-        secret=True,
-    ),
-    ConfigFieldSpec(
-        "DEEPSEEK_API_KEY",
-        "DeepSeek API Key",
-        "providers",
-        "secret",
-        settings_attr="deepseek_api_key",
-        secret=True,
-    ),
-    ConfigFieldSpec(
-        "KIMI_API_KEY",
-        "Kimi API Key",
-        "providers",
-        "secret",
-        settings_attr="kimi_api_key",
-        secret=True,
-    ),
-    ConfigFieldSpec(
-        "WAFER_API_KEY",
-        "Wafer API Key",
-        "providers",
-        "secret",
-        settings_attr="wafer_api_key",
-        secret=True,
-    ),
-    ConfigFieldSpec(
-        "OPENCODE_API_KEY",
-        "OpenCode API Key",
-        "providers",
-        "secret",
-        settings_attr="opencode_api_key",
-        secret=True,
-        description=(
-            "OpenCode Zen curated gateway (opencode.ai/zen/v1) and OpenCode Go subscription "
-            "gateway (opencode.ai/zen/go/v1); single key from opencode.ai/auth."
-        ),
-    ),
-    ConfigFieldSpec(
-        "ZAI_API_KEY",
-        "Z.ai API Key",
-        "providers",
-        "secret",
-        settings_attr="zai_api_key",
-        secret=True,
-        description="Z.ai Coding Plan API key.",
-    ),
-    ConfigFieldSpec(
-        "FIREWORKS_API_KEY",
-        "Fireworks API Key",
-        "providers",
-        "secret",
-        settings_attr="fireworks_api_key",
-        secret=True,
-        description="Fireworks AI inference API key.",
-    ),
+_STATIC_FIELDS: tuple[ConfigFieldSpec, ...] = (
     ConfigFieldSpec(
         "LM_STUDIO_BASE_URL",
         "LM Studio Base URL",
@@ -185,4 +115,9 @@ FIELDS: tuple[ConfigFieldSpec, ...] = (
         secret=True,
         advanced=True,
     ),
+)
+
+FIELDS: tuple[ConfigFieldSpec, ...] = (
+    *catalog_credential_field_specs(),
+    *_STATIC_FIELDS,
 )

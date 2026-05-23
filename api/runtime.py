@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -222,59 +221,9 @@ class AppRuntime:
                 )
 
     async def _start_message_handler(self) -> None:
-        from cli.manager import CLISessionManager
-        from messaging.bootstrap import restore_tree_queue_state
-        from messaging.handler import ClaudeMessageHandler
-        from messaging.session import SessionStore
+        from api.messaging_startup import start_messaging_handler_stack
 
-        workspace = (
-            os.path.abspath(self.settings.allowed_dir)
-            if self.settings.allowed_dir
-            else os.getcwd()
-        )
-        os.makedirs(workspace, exist_ok=True)
-
-        data_path = os.path.abspath(self.settings.claude_workspace)
-        os.makedirs(data_path, exist_ok=True)
-
-        api_url = f"http://{self.settings.host}:{self.settings.port}/v1"
-        allowed_dirs = [workspace] if self.settings.allowed_dir else []
-        plans_dir_abs = os.path.abspath(
-            os.path.join(self.settings.claude_workspace, "plans")
-        )
-        plans_directory = os.path.relpath(plans_dir_abs, workspace)
-        self.cli_manager = CLISessionManager(
-            workspace_path=workspace,
-            api_url=api_url,
-            allowed_dirs=allowed_dirs,
-            plans_directory=plans_directory,
-            claude_bin=self.settings.claude_cli_bin,
-            auth_token=getattr(self.settings, "anthropic_auth_token", ""),
-            log_raw_cli_diagnostics=self.settings.log_raw_cli_diagnostics,
-            log_messaging_error_details=self.settings.log_messaging_error_details,
-        )
-
-        session_store = SessionStore(
-            storage_path=os.path.join(data_path, "sessions.json"),
-            message_log_cap=self.settings.max_message_log_entries_per_chat,
-        )
-        platform = self.messaging_platform
-        assert platform is not None
-        self.message_handler = ClaudeMessageHandler(
-            platform=platform,
-            cli_manager=self.cli_manager,
-            session_store=session_store,
-            debug_platform_edits=self.settings.debug_platform_edits,
-            debug_subagent_stack=self.settings.debug_subagent_stack,
-            log_raw_messaging_content=self.settings.log_raw_messaging_content,
-            log_raw_cli_diagnostics=self.settings.log_raw_cli_diagnostics,
-            log_messaging_error_details=self.settings.log_messaging_error_details,
-        )
-        restore_tree_queue_state(self.settings, self.message_handler, session_store)
-
-        platform.on_message(self.message_handler.handle_message)
-        await platform.start()
-        logger.info(f"{platform.name} platform started with message handler")
+        await start_messaging_handler_stack(self)
 
     def _publish_state(self) -> None:
         self.app.state.messaging_platform = self.messaging_platform

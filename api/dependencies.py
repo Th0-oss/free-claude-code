@@ -32,6 +32,19 @@ from providers.registry import PROVIDER_DESCRIPTORS, ProviderRegistry
 
 # Process-level provider cache: :mod:`api.provider_process_cache`.
 
+_process_registry: ProviderRegistry | None = None
+_process_providers_dict_id: int | None = None
+
+
+def _process_scope_registry() -> ProviderRegistry:
+    """Registry view over ``PROCESS_PROVIDERS``; rebuilds if the dict is rebound."""
+    global _process_registry, _process_providers_dict_id
+    pid = id(_process_cache.PROCESS_PROVIDERS)
+    if _process_registry is None or _process_providers_dict_id != pid:
+        _process_registry = ProviderRegistry(_process_cache.PROCESS_PROVIDERS)
+        _process_providers_dict_id = pid
+    return _process_registry
+
 
 def get_settings() -> Settings:
     """Return cached :class:`~config.settings.Settings` (FastAPI-friendly alias)."""
@@ -64,11 +77,7 @@ def resolve_provider(
                 "or assign app.state.provider_registry for test apps."
             )
         return _resolve_with_registry(reg, provider_type, settings)
-    return _resolve_with_registry(
-        ProviderRegistry(_process_cache.PROCESS_PROVIDERS),
-        provider_type,
-        settings,
-    )
+    return _resolve_with_registry(_process_scope_registry(), provider_type, settings)
 
 
 def _resolve_with_registry(

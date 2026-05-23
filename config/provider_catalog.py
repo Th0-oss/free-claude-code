@@ -43,7 +43,8 @@ class ProviderDescriptor:
 
     provider_id: str
     transport_type: TransportType
-    #: Name of the ``_create_<adapter>`` callable in :mod:`providers.registry`.
+    #: Name of factory in :mod:`providers.registry` — ``_create_*`` or
+    #: ``_create_catalog_openai_chat`` rows (bound per id when ``openai_request_module``).
     registry_factory: str
     capabilities: tuple[str, ...]
     credential_env: str | None = None
@@ -144,7 +145,7 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     "kimi": ProviderDescriptor(
         provider_id="kimi",
         transport_type="openai_chat",
-        registry_factory="_create_kimi",
+        registry_factory="_create_catalog_openai_chat",
         capabilities=("chat", "streaming", "tools"),
         credential_env="KIMI_API_KEY",
         credential_url="https://platform.moonshot.cn/console/api-keys",
@@ -169,7 +170,7 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     "opencode": ProviderDescriptor(
         provider_id="opencode",
         transport_type="openai_chat",
-        registry_factory="_create_opencode",
+        registry_factory="_create_catalog_openai_chat",
         capabilities=("chat", "streaming", "tools", "thinking", "rate_limit"),
         credential_env="OPENCODE_API_KEY",
         credential_url="https://opencode.ai/auth",
@@ -182,7 +183,7 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     "opencode_go": ProviderDescriptor(
         provider_id="opencode_go",
         transport_type="openai_chat",
-        registry_factory="_create_opencode_go",
+        registry_factory="_create_catalog_openai_chat",
         capabilities=("chat", "streaming", "tools", "thinking", "rate_limit"),
         credential_env="OPENCODE_API_KEY",
         credential_url="https://opencode.ai/auth",
@@ -195,7 +196,7 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     "zai": ProviderDescriptor(
         provider_id="zai",
         transport_type="openai_chat",
-        registry_factory="_create_zai",
+        registry_factory="_create_catalog_openai_chat",
         capabilities=("chat", "streaming", "tools", "thinking", "rate_limit"),
         credential_env="ZAI_API_KEY",
         credential_attr="zai_api_key",
@@ -207,7 +208,7 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     "fireworks": ProviderDescriptor(
         provider_id="fireworks",
         transport_type="openai_chat",
-        registry_factory="_create_fireworks",
+        registry_factory="_create_catalog_openai_chat",
         capabilities=("chat", "streaming", "tools", "thinking", "rate_limit"),
         credential_env="FIREWORKS_API_KEY",
         credential_url="https://fireworks.ai/account/api-keys",
