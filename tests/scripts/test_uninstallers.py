@@ -209,6 +209,12 @@ def test_uninstall_sh_generic_uv_failure_does_not_delete_fcc_home(
     )
     uv.chmod(uv.stat().st_mode | stat.S_IXUSR)
 
+    # Stub pgrep so the process guard never triggers with real fcc-server /
+    # fcc-claude processes from the current session.
+    pgrep = bin_dir / "pgrep"
+    pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    pgrep.chmod(pgrep.stat().st_mode | stat.S_IXUSR)
+
     result = subprocess.run(
         [sh, str(_repo_root() / "scripts" / "uninstall.sh")],
         cwd=_repo_root(),

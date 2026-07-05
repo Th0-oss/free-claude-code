@@ -19,7 +19,7 @@ def _launcher_settings(
     token: str = "freecc",
 ) -> Settings:
     return Settings.model_construct(
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=port,
         anthropic_auth_token=token,
         model="nvidia_nim/test-model",
