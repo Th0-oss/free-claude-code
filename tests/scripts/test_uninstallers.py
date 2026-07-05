@@ -249,6 +249,12 @@ def test_uninstall_sh_missing_tool_still_deletes_fcc_home(tmp_path: Path) -> Non
     )
     uv.chmod(uv.stat().st_mode | stat.S_IXUSR)
 
+
+    # Stub pgrep so the process guard never triggers with real fcc-server /
+    # fcc-claude processes from the current session.
+    pgrep = bin_dir / "pgrep"
+    pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    pgrep.chmod(pgrep.stat().st_mode | stat.S_IXUSR)
     result = subprocess.run(
         [sh, str(_repo_root() / "scripts" / "uninstall.sh")],
         cwd=_repo_root(),
@@ -273,6 +279,12 @@ def test_uninstall_sh_missing_uv_still_deletes_fcc_home(tmp_path: Path) -> None:
     fcc_home.mkdir(parents=True)
     empty_bin.mkdir()
 
+
+    # Stub pgrep so the process guard never triggers with real fcc-server /
+    # fcc-claude processes from the current session.
+    pgrep = empty_bin / "pgrep"
+    pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    pgrep.chmod(pgrep.stat().st_mode | stat.S_IXUSR)
     result = subprocess.run(
         [sh, str(_repo_root() / "scripts" / "uninstall.sh")],
         cwd=_repo_root(),
@@ -374,6 +386,12 @@ def test_uninstall_ps1_missing_uv_still_deletes_fcc_home(tmp_path: Path) -> None
     fcc_home.mkdir(parents=True)
     empty_bin.mkdir()
 
+
+    # Stub pgrep so the process guard never triggers with real fcc-server /
+    # fcc-claude processes from the current session.
+    pgrep = empty_bin / "pgrep"
+    pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+    pgrep.chmod(pgrep.stat().st_mode | stat.S_IXUSR)
     result = subprocess.run(
         [pwsh, "-NoProfile", "-File", str(_repo_root() / "scripts" / "uninstall.ps1")],
         cwd=_repo_root(),
