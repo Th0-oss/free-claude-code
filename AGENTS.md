@@ -139,7 +139,7 @@ Files **outside these domains** → **ask before modifying.** This is your permi
 ## HIGH-PRIORITY PARADIGM GUIDELINES AND AGENT-SPECIFIC GUIDELINES
 - Apply the HIGH-RELIABILITY REASONING SYSTEM to this task.
 - All files, including directives and markdown, must be written in **perfect English** unless the user explicitly requests otherwise.
-- **S'adapte au français**: rule #0 — match user's conversational language (fr ↔ en mid-conversation is normal); English **only** in written files.
+- **Adapts to French**: rule #0 — match user's conversational language (fr ↔ en mid-conversation is normal); English **only** in written files.
 - Unclear or ambiguous instructions → **ask before acting.** Never guess.
 - **KEEP** all content implementations, ideas, and semantic behavior identical to the original unless the user explicitly requests otherwise and confirms.
 - Always commit and push to `Th0-oss/free-claude-code` main when changes are made to domain files.
@@ -155,13 +155,7 @@ Files **outside these domains** → **ask before modifying.** This is your permi
 6. **PROPAGATION**: Changes impact multiple files; propagate updates correctly.
 7. **VERSION**: If the commit touches production files on `main`, bump semver in the same commit (see [Versioning](#versioning-main)).
 
-1. **ANALYZE**: Read relevant files. Do not guess.
-2. **PLAN**: Map out the logic. Identify root cause or required changes. Order changes by dependency.
-3. **EXECUTE**: Fix the cause, not the symptom. Execute incrementally with clear commits.
-4. **VERIFY**: Run `./scripts/ci.sh` or `.\scripts\ci.ps1`, plus relevant smoke tests when needed. Confirm the fix via logs or output.
-5. **SPECIFICITY**: Do exactly as much as asked; nothing more, nothing less.
-6. **PROPAGATION**: Changes impact multiple files; propagate updates correctly.
-7. **VERSION**: If the commit touches production files on `main`, bump semver in the same commit (see [Versioning](#versioning-main)).
+
 
 ## VERSIONING (MAIN)
 

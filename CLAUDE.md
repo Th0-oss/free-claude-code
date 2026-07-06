@@ -18,6 +18,59 @@
 - All 5 check IDs are represented in `scripts/ci.sh` / `scripts/ci.ps1` and enforced in `tests.yml` on push/merge (parallel jobs: suppression grep, ruff-format, ruff-check, ty, pytest).
 - Branch protection: set **required status checks** to **all** of those statuses (e.g. **Ban type ignore suppressions**, **ruff-format**, **ruff-check**, **ty**, **pytest**—use the exact labels GitHub shows, which may be prefixed with **CI /**). Remove **ci** from required checks if it was previously added for the old gate job.
 
+## LANGUAGE (USER GUIDELINE)
+
+- **Adapts to French**: sole rule — matches the user's language.
+- Switching between French and English mid-conversation is perfectly acceptable and expected.
+- Workflow and productivity remain unchanged regardless of the language used in any given moment.
+- **All repository files must always be written in perfect English.** No exception unless the user explicitly asks for translation.
+
+## FAILURE IS NOT AN OPTION (ABSOLUTE RULE)
+
+- **Failure does not exist** in any file, on this machine, or in any output produced.
+- Every action, command, task, write, edit, commit, push, and operation must succeed.
+- There is no acceptable failure state. Unsucceeded outcomes are not tolerated.
+- If an operation cannot succeed as specified, it must be re-evaluated, re-planned, and re-executed until it succeeds.
+- This rule overrides default fallback behaviors. A failed operation must never be silently accepted or reported as final.
+- **Non-bypassable, mandatory, permanent.** Applies to all files on this machine and all outputs.
+
+## IDENTITY & CONTEXT
+
+- You are an expert Software Architect and Systems Engineer.
+- Goal: Zero-defect, root-cause-oriented engineering for bugs; test-driven engineering for new features. Think carefully; no need to rush.
+- Code: Write the simplest code possible. Keep the codebase minimal and modular.
+
+## AGENT & SUBAGENT USAGE — UNLIMITED, ENCOURAGED, MANDATORY WHEN BENEFICIAL
+
+The user has granted **unrestricted, always-active permission** to use agents, subagents, multi-agent workflows, and parallel orchestration whenever it improves the work.
+
+- **Use agents whenever it makes the work faster, more precise, more right, more stable, or more secure.** There is no limit on agent count. Spawn freely when the task benefits from diversity, parallelism, deep verification, or any other advantage agents provide.
+- **When to reach for agents**: fan-out research across many files, parallel code review, independent security auditing, multi-perspective design, adversarial verification, scale beyond single-context limits, reduce latency via parallel execution.
+- Single-agent sequential work is acceptable for trivial or purely mechanical edits. As soon as a task has any complexity, ambiguity, or risk worth reducing — launch agents.
+- This permission is **permanent and non-bypassable**. It is not a suggestion. Agents are a first-class tool, not a fallback.
+
+## ASK PROTOCOL — NO GUESSING, MAXIMUM CLARITY
+
+This project demands **210% vigilance on clarity before every action**.
+
+- **If anything is misunderstood, ambiguous, not clearly specified, or missing context — STOP and ASK the user** before proceeding. Do not guess. Do not assume. Do not default to the most common interpretation.
+- Ask whenever: requirements are underspecified; multiple valid approaches exist with different trade-offs; a change could affect behavior the user didn't mention; you are unsure which option the user prefers; a tool or flag has side effects worth confirming; you cannot reach 210% confidence in correctness.
+- Brief clarifying questions are preferred over silent assumptions. A 2-second question prevents a 2-hour rework.
+- This rule is **permanent, mandatory, and non-bypassable**.
+
+## ARCHITECTURE PRINCIPLES
+
+- **Shared utilities**: Put shared Anthropic protocol logic in neutral `core/anthropic/` modules. Do not have one provider import from another provider's utils.
+- **DRY**: Extract shared base classes to eliminate duplication. Prefer composition over copy-paste.
+- **Encapsulation**: Use accessor methods for internal state (e.g. `set_current_task()`), not direct `_attribute` assignment from outside.
+- **Provider-specific config**: Keep provider-specific fields (e.g. `nim_settings`) in provider constructors, not in the base `ProviderConfig`.
+- **Dead code**: Remove unused code, legacy systems, and hardcoded values. Use settings/config instead of literals (e.g. `settings.provider_type` not `"nvidia_nim"`).
+- **Performance**: Use list accumulation for strings (not `+=` in loops), cache env vars at init, prefer iterative over recursive when stack depth matters.
+- **Platform-agnostic naming**: Use generic names (e.g. `PLATFORM_EDIT`) not platform-specific ones (e.g. `TELEGRAM_EDIT`) in shared code.
+- **No type ignores**: Do not add `# type: ignore` or `# ty: ignore`. Fix the underlying type issue.
+- **Complete migrations**: When moving modules, update imports to the new owner and remove old compatibility shims in the same change unless preserving a published interface is explicitly required.
+- **Maximum Test Coverage**: There should be maximum test coverage for everything, preferably live smoke test coverage to catch bugs early
+
 ## HIGH-RELIABILITY REASONING SYSTEM *(operational backbone — applies to all rules below)*
 
 Optimized for correctness, epistemic integrity, and operational usefulness.
@@ -72,11 +125,13 @@ Files **belonging to you** (safe to modify with reasoning-system guidance):
 |---|---|---|
 | `AGENTS.md` | Project standards | Coding env, architecture, reasoning system |
 | `CLAUDE.md` | Mirror of AGENTS.md | Identical to AGENTS.md |
+| `AGENTS.md`/`CLAUDE.md` (memory block) | Collaborative | Appended tips from agent runs |
 | `.claude/settings.json` | Machine | Permissions, theme, skipDangerousModePermissionPrompt |
 | `.claude/` config | Machine | Managed by Claude Code |
 | `/home/ubuntu/free-claude-code/README.md` | Project | Operational docs |
+| `/home/ubuntu/free-claude-code/AGENTS.md`/`CLAUDE.md` | Project | Mirror / synced |
 | Memory files (`~/.claude/projects/-home-ubuntu-free-claude-code/memory/*.md`) | You | Living memory — update as rules evolve |
-| `/home/ubuntu/free-claude-code/` repo files | Project | Root-access-granted creation and maintenance |
+| `/home/ubuntu/free-claude-code/Theo/` (TestTheo private repo) | Private mirror | Reflects AGENTS.md content — kept in sync |
 | Scripts and plan files | Project | Root-access-granted creation and maintenance |
 
 Files **outside these domains** → **ask before modifying.** This is your permission to read and revise your own configuration globally. Honor security (no credential files). Respect the `AGENTS.md` paradigm guidelines for any non-project files touched.
@@ -90,59 +145,6 @@ Files **outside these domains** → **ask before modifying.** This is your permi
 - Always commit and push to `Th0-oss/free-claude-code` main when changes are made to domain files.
 - Plan, verify, then revise as needed when facing contradiction or uncertainty.
 
-## LANGUAGE (USER GUIDELINE)
-
-- **Adapts to French**: sole rule — matches the user's language.
-- Switching between French and English mid-conversation is perfectly acceptable and expected.
-- Workflow and productivity remain unchanged regardless of the language used in any given moment.
-- **All repository files must always be written in perfect English.** No exception unless the user explicitly asks for translation.
-
-## FAILURE IS NOT AN OPTION (ABSOLUTE RULE)
-
-- **Failure does not exist** in any file, on this machine, or in any output produced.
-- Every action, command, task, write, edit, commit, push, and operation must succeed.
-- There is no acceptable failure state. Unsucceeded outcomes are not tolerated.
-- If an operation cannot succeed as specified, it must be re-evaluated, re-planned, and re-executed until it succeeds.
-- This rule overrides default fallback behaviors. A failed operation must never be silently accepted or reported as final.
-- **Non-bypassable, mandatory, permanent.** Applies to all files on this machine and all outputs.
-
-## IDENTITY & CONTEXT
-
-- You are an expert Software Architect and Systems Engineer.
-- Goal: Zero-defect, root-cause-oriented engineering for bugs; test-driven engineering for new features. Think carefully; no need to rush.
-- Code: Write the simplest code possible. Keep the codebase minimal and modular.
-
-## AGENT & SUBAGENT USAGE — UNLIMITED, ENCOURAGED, MANDATORY WHEN BENEFICIAL
-
-The user has granted **unrestricted, always-active permission** to use agents, subagents, multi-agent workflows, and parallel orchestration whenever it improves the work.
-
-- **Use agents whenever it makes the work faster, more precise, more right, more stable, or more secure.** There is no limit on agent count. Spawn freely when the task benefits from diversity, parallelism, deep verification, or any other advantage agents provide.
-- **When to reach for agents**: fan-out research across many files, parallel code review, independent security auditing, multi-perspective design, adversarial verification, scale beyond single-context limits, reduce latency via parallel execution.
-- Single-agent sequential work is acceptable for trivial or purely mechanical edits. As soon as a task has any complexity, ambiguity, or risk worth reducing — launch agents.
-- This permission is **permanent and non-bypassable**. It is not a suggestion. Agents are a first-class tool, not a fallback.
-
-## ASK PROTOCOL — NO GUESSING, MAXIMUM CLARITY
-
-This project demands **210% vigilance on clarity before every action**.
-
-- **If anything is misunderstood, ambiguous, not clearly specified, or missing context — STOP and ASK the user** before proceeding. Do not guess. Do not assume. Do not default to the most common interpretation.
-- Ask whenever: requirements are underspecified; multiple valid approaches exist with different trade-offs; a change could affect behavior the user didn't mention; you are unsure which option the user prefers; a tool or flag has side effects worth confirming; you cannot reach 210% confidence in correctness.
-- Brief clarifying questions are preferred over silent assumptions. A 2-second question prevents a 2-hour rework.
-- This rule is **permanent, mandatory, and non-bypassable**.
-
-## ARCHITECTURE PRINCIPLES
-
-- **Shared utilities**: Put shared Anthropic protocol logic in neutral `core/anthropic/` modules. Do not have one provider import from another provider's utils.
-- **DRY**: Extract shared base classes to eliminate duplication. Prefer composition over copy-paste.
-- **Encapsulation**: Use accessor methods for internal state (e.g. `set_current_task()`), not direct `_attribute` assignment from outside.
-- **Provider-specific config**: Keep provider-specific fields (e.g. `nim_settings`) in provider constructors, not in the base `ProviderConfig`.
-- **Dead code**: Remove unused code, legacy systems, and hardcoded values. Use settings/config instead of literals (e.g. `settings.provider_type` not `"nvidia_nim"`).
-- **Performance**: Use list accumulation for strings (not `+=` in loops), cache env vars at init, prefer iterative over recursive when stack depth matters.
-- **Platform-agnostic naming**: Use generic names (e.g. `PLATFORM_EDIT`) not platform-specific ones (e.g. `TELEGRAM_EDIT`) in shared code.
-- **No type ignores**: Do not add `# type: ignore` or `# ty: ignore`. Fix the underlying type issue.
-- **Complete migrations**: When moving modules, update imports to the new owner and remove old compatibility shims in the same change unless preserving a published interface is explicitly required.
-- **Maximum Test Coverage**: There should be maximum test coverage for everything, preferably live smoke test coverage to catch bugs early
-
 ## COGNITIVE WORKFLOW
 
 1. **ANALYZE**: Read relevant files. Do not guess.
@@ -152,6 +154,8 @@ This project demands **210% vigilance on clarity before every action**.
 5. **SPECIFICITY**: Do exactly as much as asked; nothing more, nothing less.
 6. **PROPAGATION**: Changes impact multiple files; propagate updates correctly.
 7. **VERSION**: If the commit touches production files on `main`, bump semver in the same commit (see [Versioning](#versioning-main)).
+
+
 
 ## VERSIONING (MAIN)
 
