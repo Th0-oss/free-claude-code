@@ -33,7 +33,7 @@ def test_env_precedence_e2e(smoke_config: SmokeConfig, tmp_path) -> None:
     script = (
         "from config.settings import get_settings; "
         "s=get_settings(); "
-        "print(s.model); print(s.anthropic_auth_token)"
+        "print(s.model); print(len(s.anthropic_auth_token))"
     )
     result = run_captured_text(
         cmd_python_c(script),
@@ -44,7 +44,7 @@ def test_env_precedence_e2e(smoke_config: SmokeConfig, tmp_path) -> None:
     )
     assert result.returncode == 0, result.stderr
     lines = result.stdout.splitlines()
-    assert lines == ["nvidia_nim/process-model", "dotenv-token"]
+    assert lines == ["nvidia_nim/process-model", str(len("dotenv-token"))]
 
 
 @pytest.mark.smoke_target("config")

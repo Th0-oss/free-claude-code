@@ -86,7 +86,7 @@ class TreeQueueProcessor:
         try:
             await processor(node.node_id, node)
         except asyncio.CancelledError:
-            logger.info(f"Task for node {node.node_id} was cancelled")
+            logger.info("Task for node {} was cancelled", node.node_id)
             raise
         except Exception as e:
             d = get_settings().log_messaging_error_details
@@ -120,13 +120,13 @@ class TreeQueueProcessor:
 
                 if not next_node_id:
                     tree.set_processing_state(None, False)
-                    logger.debug(f"Tree {tree.root_id} queue empty, marking as free")
+                    logger.debug("Tree {} queue empty, marking as free", tree.root_id)
                     break
 
                 node = tree.get_node(next_node_id)
                 if node:
                     tree.set_processing_state(next_node_id, True)
-                    logger.info(f"Processing next queued node {next_node_id}")
+                    logger.info("Processing next queued node {}", next_node_id)
                     tree.set_current_task(
                         asyncio.create_task(self.process_node(tree, node, processor))
                     )
@@ -160,7 +160,7 @@ class TreeQueueProcessor:
             if tree.is_processing:
                 tree.put_queue_unlocked(node_id)
                 queue_size = tree.get_queue_size()
-                logger.info(f"Queued node {node_id}, position {queue_size}")
+                logger.info("Queued node {}, position {}", node_id, queue_size)
                 return True
 
             tree.set_processing_state(node_id, True)

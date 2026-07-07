@@ -142,7 +142,7 @@ class MessagingWorkflow:
         """
         logger.info("Cancelling tree queue tasks...")
         cancelled_nodes = await self.tree_queue.cancel_all()
-        logger.info(f"Cancelled {len(cancelled_nodes)} nodes")
+        logger.info("Cancelled {} nodes", len(cancelled_nodes))
 
         logger.info("Stopping all CLI sessions...")
         await self.cli_manager.stop_all()

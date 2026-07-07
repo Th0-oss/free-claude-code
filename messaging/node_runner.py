@@ -255,7 +255,7 @@ class MessagingNodeRunner:
                 chat_id=chat_id,
                 node_id=node_id,
             )
-            logger.warning(f"HANDLER: Task cancelled for node {node_id}")
+            logger.warning("HANDLER: Task cancelled for node {}", node_id)
             cancel_reason = None
             if isinstance(node.context, dict):
                 cancel_reason = node.context.get("cancel_reason")

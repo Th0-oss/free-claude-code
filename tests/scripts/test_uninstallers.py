@@ -249,7 +249,6 @@ def test_uninstall_sh_missing_tool_still_deletes_fcc_home(tmp_path: Path) -> Non
     )
     uv.chmod(uv.stat().st_mode | stat.S_IXUSR)
 
-
     # Stub pgrep so the process guard never triggers with real fcc-server /
     # fcc-claude processes from the current session.
     pgrep = bin_dir / "pgrep"
@@ -278,7 +277,6 @@ def test_uninstall_sh_missing_uv_still_deletes_fcc_home(tmp_path: Path) -> None:
     empty_bin = tmp_path / "empty-bin"
     fcc_home.mkdir(parents=True)
     empty_bin.mkdir()
-
 
     # Stub pgrep so the process guard never triggers with real fcc-server /
     # fcc-claude processes from the current session.
@@ -385,7 +383,6 @@ def test_uninstall_ps1_missing_uv_still_deletes_fcc_home(tmp_path: Path) -> None
     empty_bin = tmp_path / "empty-bin"
     fcc_home.mkdir(parents=True)
     empty_bin.mkdir()
-
 
     # Stub pgrep so the process guard never triggers with real fcc-server /
     # fcc-claude processes from the current session.

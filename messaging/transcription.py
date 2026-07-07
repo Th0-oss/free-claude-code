@@ -160,5 +160,5 @@ def _transcribe_local(
     if isinstance(text, list):
         text = " ".join(text) if text else ""
     result_text = text.strip()
-    logger.debug(f"Local transcription: {len(result_text)} chars")
+    logger.debug("Local transcription: {} chars", len(result_text))
     return result_text or "(no speech detected)"

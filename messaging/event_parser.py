@@ -152,7 +152,7 @@ def parse_cli_event(event: Any, *, log_raw_cli: bool = False) -> list[dict]:
         code = event.get("code", 0)
         stderr = event.get("stderr")
         if code == 0:
-            logger.debug(f"CLI_PARSER: Successful exit (code={code})")
+            logger.debug("CLI_PARSER: Successful exit (code={})", code)
             return [{"type": "complete", "status": "success"}]
         else:
             # Non-zero exit is an error
@@ -177,5 +177,5 @@ def parse_cli_event(event: Any, *, log_raw_cli: bool = False) -> list[dict]:
 
     # Log unrecognized events for debugging
     if etype:
-        logger.debug(f"CLI_PARSER: Unrecognized event type: {etype}")
+        logger.debug("CLI_PARSER: Unrecognized event type: {}", etype)
     return []

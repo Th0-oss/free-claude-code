@@ -90,10 +90,11 @@ class MessagingTurnIntake:
             if tree:
                 parent_node_id = tree_queue.resolve_parent_node_id(reply_id)
                 if parent_node_id:
-                    logger.info(f"Found tree for reply, parent node: {parent_node_id}")
+                    logger.info("Found tree for reply, parent node: {}", parent_node_id)
                 else:
                     logger.warning(
-                        f"Reply to {incoming.reply_to_message_id} found tree but no valid parent node"
+                        "Reply to {} found tree but no valid parent node",
+                        incoming.reply_to_message_id,
                     )
                     tree = None
 

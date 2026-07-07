@@ -65,7 +65,7 @@ class TreeQueueManager:
             tree = MessageTree(root_node)
             self._repository.add_tree(node_id, tree)
 
-            logger.info(f"Created new tree with root {node_id}")
+            logger.info("Created new tree with root {}", node_id)
             return tree
 
     async def add_to_tree(
@@ -105,7 +105,7 @@ class TreeQueueManager:
         async with self._lock:
             self._repository.register_node(node_id, tree.root_id)
 
-        logger.info(f"Added node {node_id} to tree {tree.root_id}")
+        logger.info("Added node {} to tree {}", node_id, tree.root_id)
         return tree, node
 
     def get_tree(self, root_id: str) -> MessageTree | None:
@@ -152,7 +152,7 @@ class TreeQueueManager:
         """
         tree = self._repository.get_tree_for_node(node_id)
         if not tree:
-            logger.error(f"No tree found for node {node_id}")
+            logger.error("No tree found for node {}", node_id)
             return False
 
         return await self._processor.enqueue_and_start(tree, node_id, processor)
@@ -248,10 +248,10 @@ class TreeQueueManager:
 
         if cancelled_nodes:
             logger.info(
-                f"Cancelled {len(cancelled_nodes)} active nodes in tree {root_id}"
+                "Cancelled {} active nodes in tree {}", len(cancelled_nodes), root_id
             )
         if cleanup_count:
-            logger.info(f"Cleaned up {cleanup_count} stale nodes in tree {root_id}")
+            logger.info("Cleaned up {} stale nodes in tree {}", cleanup_count, root_id)
 
         return cancelled_nodes
 
@@ -313,7 +313,7 @@ class TreeQueueManager:
                     tree.set_node_error_sync(node, "Lost during server restart")
                     count += 1
         if count:
-            logger.info(f"Cleaned up {count} stale nodes during startup")
+            logger.info("Cleaned up {} stale nodes during startup", count)
         return count
 
     def get_tree_count(self) -> int:
@@ -371,7 +371,9 @@ class TreeQueueManager:
                     cancelled.append(node)
 
         if cancelled:
-            logger.info(f"Cancelled {len(cancelled)} nodes in branch {branch_root_id}")
+            logger.info(
+                "Cancelled {} nodes in branch {}", len(cancelled), branch_root_id
+            )
         if removed_from_queue:
             await self._processor.notify_queue_updated(tree)
         return cancelled

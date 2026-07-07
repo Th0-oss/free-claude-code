@@ -122,7 +122,7 @@ async def _delete_message_ids(
                 chat_id, chunk, fire_and_forget=False
             )
     except Exception as e:
-        logger.debug(f"Batch delete failed: {type(e).__name__}: {e}")
+        logger.debug("Batch delete failed: {}: {}", type(e).__name__, e)
 
 
 async def _handle_clear_branch(
@@ -173,7 +173,7 @@ async def _handle_clear_branch(
             if updated_tree:
                 handler.session_store.save_tree_snapshot(updated_tree.snapshot())
     except Exception as e:
-        logger.warning(f"Failed to update session store after branch clear: {e}")
+        logger.warning("Failed to update session store after branch clear: {}", e)
 
 
 async def handle_clear_command(
@@ -244,7 +244,7 @@ async def handle_clear_command(
             if mid is not None:
                 msg_ids.add(str(mid))
     except Exception as e:
-        logger.debug(f"Failed to read message log for /clear: {e}")
+        logger.debug("Failed to read message log for /clear: {}", e)
 
     try:
         msg_ids.update(
@@ -253,7 +253,7 @@ async def handle_clear_command(
             )
         )
     except Exception as e:
-        logger.warning(f"Failed to gather messages for /clear: {e}")
+        logger.warning("Failed to gather messages for /clear: {}", e)
 
     # Also delete the command message itself.
     if incoming.message_id is not None:
@@ -265,7 +265,7 @@ async def handle_clear_command(
     try:
         handler.session_store.clear_all()
     except Exception as e:
-        logger.warning(f"Failed to clear session store: {e}")
+        logger.warning("Failed to clear session store: {}", e)
 
     handler.replace_tree_queue(
         TreeQueueManager(
