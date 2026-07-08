@@ -64,17 +64,17 @@ The systemd watchdog provides real 24/7/365 persistence:
 
 The watchdog guarantees **instant relaunch** when tasks finish — no waiting.
 
-- **Primary polling**: every 30 seconds via internal loop in the watchdog script.
+- **Primary polling**: every 10 seconds via internal loop in the watchdog script.
 - **Safety-net timer**: systemd timer every 5 minutes — only catches boot/resume
   scenarios; the 30-second loop is the active driver.
 - **Lock semantics**:
   - Lock held by active Claude session.
-  - Lock age < 30s → session is running → skip (check again in 30s).
-  - Lock age ≥ 30s (or absent) → no session → **IMMEDIATELY relaunch**.
-  - Stale lock threshold: 60 seconds — if lock is older, it's forcibly removed.
+  - Lock age < 10s → session is running → skip (check again in 10s).
+  - Lock age ≥ 10s (or absent) → no session → **IMMEDIATELY relaunch**.
+  - Stale lock threshold: 30 seconds — if lock is older, it's forcibly removed.
 - **Zero-gap**: when Claude finishes all tasks and exits, the lock is released.
   The watchdog detects this within 30 seconds and relaunches. There is no idle gap.
-- **Never idle**: the watchdog never sleeps beyond 30 seconds. It keeps the loop
+- **Never idle**: the watchdog never sleeps beyond 10 seconds. It keeps the loop
   alive 24/7/365 even when no work is visible — Claude will scan and create tasks.
 
 ### 2.2 Automatic Task Continuation
@@ -118,7 +118,7 @@ multi-agent workflows, and parallel orchestration whenever it improves the work.
   scale beyond single-context limits, reduce latency via parallel execution.
 - Single-agent sequential work is acceptable for trivial or purely mechanical edits. As
   soon as a task has any complexity, ambiguity, or risk worth reducing — launch agents.
-- **Concurrency control**: do not run more than 6–7 parallel agents simultaneously unless
+- **Concurrency control**: do not run more than 8–10 parallel agents simultaneously unless
   the task explicitly requires fan-out. Prefer sequential or `pipeline()` over
   `parallel()` for independent steps.
 - This permission is **permanent and non-bypassable**. It is not a suggestion. Agents are

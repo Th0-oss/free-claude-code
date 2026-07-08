@@ -89,7 +89,7 @@ multi-agent workflows, and parallel orchestration whenever it improves the work.
   scale beyond single-context limits, reduce latency via parallel execution.
 - Single-agent sequential work is acceptable for trivial or purely mechanical edits. As
   soon as a task has any complexity, ambiguity, or risk worth reducing — launch agents.
-- **Concurrency control**: do not launch more than 6–7 parallel agents simultaneously
+- **Concurrency control**: do not launch more than 8–10 parallel agents simultaneously
   unless the task explicitly requires fan-out. Prefer `pipeline()` over `parallel()`
   for independent sequential steps.
 - This permission is **permanent and non-bypassable**. It is not a suggestion. Agents are
@@ -107,27 +107,27 @@ year** without stopping.
 
 The watchdog uses two layers:
 
-- **Primary loop**: internal 30-second polling in the watchdog script — near-instant
+- **Primary loop**: internal 10-second polling in the watchdog script — near-instant
   detection and relaunch when tasks finish.
 - **Systemd timer**: every 5 minutes — safety net for boot/resume; the 30-second loop
   is the active driver during normal operation.
 
 **Relaunch logic — zero-gap when tasks finish:**
 
-- **If a session is running** (atomic lock is fresh, < 30 seconds old):
-  - Skip this 30-second cycle. The running session has tasks in progress.
-  - Next check in 30 seconds.
-- **If no session is running** (no lock, or lock is stale ≥ 30 seconds):
+- **If a session is running** (atomic lock is fresh, < 10 seconds old):
+  - Skip this 10-second cycle. The running session has tasks in progress.
+  - Next check in 10 seconds.
+- **If no session is running** (no lock, or lock is stale ≥ 10 seconds):
   - **IMMEDIATELY relaunch Claude** — no conditions, no quotas, no waiting.
   - When Claude finishes all work and exits, the lock is released.
-  - Within 30 seconds, the watchdog detects the free lock and relaunches.
+  - Within 10 seconds, the watchdog detects the free lock and relaunches.
   - This is the core 24/7 loop — there is never an idle gap between sessions.
-- Stale lock threshold: 60 seconds. Locks older than that are forcibly removed
+- Stale lock threshold: 30 seconds. Locks older than that are forcibly removed
   (prior session crashed or was killed).
 - Claude then scans for authorized work and creates tasks as needed.
 - If nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
   watchdog continues its 30-second monitoring rhythm.
-- The watchdog **never ceases monitoring**. It keeps polling every 30 seconds and will
+- The watchdog **never ceases monitoring**. It keeps polling every 10 seconds and will
   relaunch/re-monitor indefinitely — 24/7/365.
 - There is **no API call quota** between watchdog cycles.
 - Stuck-session detection via freshness marker (600s threshold); stale sessions are
@@ -144,7 +144,7 @@ The watchdog uses two layers:
 
 ### Concurrency and Loop Pacing
 
-- Maximum 6–7 parallel agents at any time. Use `pipeline()` for sequential fan-out.
+- Maximum 8–10 parallel agents at any time. Use `pipeline()` for sequential fan-out.
 - `/loop` dynamic mode self-paces: sleep up to 30 minutes when idle, 20 minutes when
   watching for events.
 - Use `CronCreate` for fixed-interval recurring work (auto-expires after 7 days).

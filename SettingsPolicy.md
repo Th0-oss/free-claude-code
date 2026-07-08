@@ -126,24 +126,24 @@ The systemd watchdog (`claude-watchdog.service` / `.timer`) is the persistence b
 of the entire autonomous operation. It runs **24 hours a day, 7 days a week, 365 days a
 year** without stopping.
 
-**Primary polling: every 30 seconds** (internal loop in the watchdog script).
+**Primary polling: every 10 seconds** (internal loop in the watchdog script).
 **Systemd timer: every 5 minutes** — safety net for boot/resume only.
 
 **Relaunch logic — zero-gap when tasks finish:**
-- **If a session is running** (atomic lock is fresh, < 30 seconds old):
-  - Skip this 30-second cycle. The running session handles tasks.
-  - Next check in 30 seconds.
-- **If no session is running** (no lock, or lock is stale ≥ 30 seconds):
+- **If a session is running** (atomic lock is fresh, < 10 seconds old):
+  - Skip this 10-second cycle. The running session handles tasks.
+  - Next check in 10 seconds.
+- **If no session is running** (no lock, or lock is stale ≥ 10 seconds):
   - **IMMEDIATELY relaunch Claude** — no conditions, no quotas, no waiting.
   - When Claude finishes all work and exits, the lock is released.
-  - Within 30 seconds, the watchdog detects the free lock and relaunches.
+  - Within 10 seconds, the watchdog detects the free lock and relaunches.
   - This is the core 24/7 loop — there is never an idle gap between sessions.
-- Stale lock threshold: 60 seconds. Locks older than that are forcibly removed
+- Stale lock threshold: 30 seconds. Locks older than that are forcibly removed
   (prior session crashed or was killed).
 - Claude scans for authorized work (lint, tests, dead code, TODOs, audit findings)
   and creates/recreates tasks as needed. If truly nothing needs doing, Claude
   idle-sleeps (up to 30 min via `/loop`) and the watchdog keeps monitoring.
-- The watchdog **never ceases monitoring**. It keeps polling every 30 seconds and will
+- The watchdog **never ceases monitoring**. It keeps polling every 10 seconds and will
   relaunch/re-monitor indefinitely — 24/7/365.
 - Does **not** throttle, delay, or skip relaunch based on prior API usage.
 - Detects stuck prior sessions via a freshness marker file (600s threshold).
@@ -190,7 +190,7 @@ Claude MUST immediately create or continue the next task — no idle gap.
 
 ### 5.6 Self-Pacing and Concurrency Control
 
-- Do not launch more than **6–7 parallel agents simultaneously** unless explicitly
+- Do not launch more than **8–10 parallel agents simultaneously** unless explicitly
   multi-agent work is needed. Prefer sequential or `pipeline()` over `parallel()`
   for independent steps.
 - Read task results and state before spawning follow-up agents — blind fan-out wastes
