@@ -120,34 +120,33 @@ Claude must never halt mid-task, never wait for confirmation before completing
 authorized work, and never abandon a task due to a transient error. A session cutoff or
 context limit is not a reason to defer or abandon mandated work.
 
-### 5.2 Watchdog — 24/7/365 Monitor and Relaunch
+### 5.2 Watchdog — 24/7/365 Monitor and Relaunch (Immediate on Task Completion)
 
 The systemd watchdog (`claude-watchdog.service` / `.timer`) is the persistence backbone
 of the entire autonomous operation. It runs **24 hours a day, 7 days a week, 365 days a
 year** without stopping.
 
-The watchdog:
+**Primary polling: every 30 seconds** (internal loop in the watchdog script).
+**Systemd timer: every 5 minutes** — safety net for boot/resume only.
 
-- Runs **every 5 minutes** via systemd timer (persistent across reboots and sessions).
-- Uses an atomic filesystem lock to prevent overlapping Claude sessions.
-- **If a session is already running** (lock is fresh, < 5 minutes old):
-  - Skips this cycle silently. The running session handles tasks.
-  - Next cycle in 5 minutes will check again.
-- **If no session is running** (no lock, or stale lock > 5 minutes):
-  - **ALWAYS relaunches Claude immediately**, regardless of whether tasks are pending,
-    idle, or anything else.
-  - This is the core 24/7 loop — it never stops, never waits for a "good moment."
-- When Claude finishes all its work and exits, the lock is released.
-- The next watchdog cycle (5 minutes later) detects the free lock and relaunches Claude.
-- Claude then scans for authorized work (lint, tests, dead code, TODOs, audit findings)
-  and creates tasks as needed.
-- If truly nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
-  watchdog continues its 5-minute monitoring rhythm.
-- The watchdog never ceases monitoring. Even when everything is idle, it keeps polling
-  every 5 minutes and will relaunch/re-monitor indefinitely.
-- Detects stuck prior sessions via a freshness marker file (600s threshold); if stale,
-  removes the lock and proceeds with relaunch.
+**Relaunch logic — zero-gap when tasks finish:**
+- **If a session is running** (atomic lock is fresh, < 30 seconds old):
+  - Skip this 30-second cycle. The running session handles tasks.
+  - Next check in 30 seconds.
+- **If no session is running** (no lock, or lock is stale ≥ 30 seconds):
+  - **IMMEDIATELY relaunch Claude** — no conditions, no quotas, no waiting.
+  - When Claude finishes all work and exits, the lock is released.
+  - Within 30 seconds, the watchdog detects the free lock and relaunches.
+  - This is the core 24/7 loop — there is never an idle gap between sessions.
+- Stale lock threshold: 60 seconds. Locks older than that are forcibly removed
+  (prior session crashed or was killed).
+- Claude scans for authorized work (lint, tests, dead code, TODOs, audit findings)
+  and creates/recreates tasks as needed. If truly nothing needs doing, Claude
+  idle-sleeps (up to 30 min via `/loop`) and the watchdog keeps monitoring.
+- The watchdog **never ceases monitoring**. It keeps polling every 30 seconds and will
+  relaunch/re-monitor indefinitely — 24/7/365.
 - Does **not** throttle, delay, or skip relaunch based on prior API usage.
+- Detects stuck prior sessions via a freshness marker file (600s threshold).
 
 ### 5.3 Auto-Resumption After Cutoff
 

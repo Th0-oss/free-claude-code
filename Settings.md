@@ -60,18 +60,22 @@ The systemd watchdog provides real 24/7/365 persistence:
   Dangerous or irreversible actions remain in the confirmation queue and are escalated
   to the user.
 
-### 2.1 Watchdog Behavior — Relaunch Logic
+### 2.1 Watchdog Behavior — Relaunch Logic (Immediate on Task Completion)
 
-- **Timer**: every 5 minutes.
-- **If a session is running** (lock fresh < 5 min): skip this cycle. Running session
-  handles tasks; next check in 5 min.
-- **If no session is running** (no lock, or stale lock > 5 min): ALWAYS relaunch
-  Claude immediately. This is the 24/7 loop — it never stops, never waits.
-- When Claude finishes work and exits, the lock is released. Next cycle (5 min later)
-  detects free lock and relaunches.
-- Claude scans for authorized work, creates tasks, or idle-sleeps. The watchdog
-  continues monitoring regardless.
-- This loop runs indefinitely: 24 hours a day, 7 days a week, 365 days a year.
+The watchdog guarantees **instant relaunch** when tasks finish — no waiting.
+
+- **Primary polling**: every 30 seconds via internal loop in the watchdog script.
+- **Safety-net timer**: systemd timer every 5 minutes — only catches boot/resume
+  scenarios; the 30-second loop is the active driver.
+- **Lock semantics**:
+  - Lock held by active Claude session.
+  - Lock age < 30s → session is running → skip (check again in 30s).
+  - Lock age ≥ 30s (or absent) → no session → **IMMEDIATELY relaunch**.
+  - Stale lock threshold: 60 seconds — if lock is older, it's forcibly removed.
+- **Zero-gap**: when Claude finishes all tasks and exits, the lock is released.
+  The watchdog detects this within 30 seconds and relaunches. There is no idle gap.
+- **Never idle**: the watchdog never sleeps beyond 30 seconds. It keeps the loop
+  alive 24/7/365 even when no work is visible — Claude will scan and create tasks.
 
 ### 2.2 Automatic Task Continuation
 
