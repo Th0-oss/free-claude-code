@@ -39,12 +39,25 @@ _AUTH_BEARER_RE = re.compile(
     r"(\bAuthorization\s*:\s*Bearer\s+)([^\s'\"]+)",
     re.IGNORECASE,
 )
+# X-API-Key: <value> (proxy API key header)
+_API_KEY_RE = re.compile(
+    r"(\bX-API-Key\s*:\s*)([^\s'\"]+)",
+    re.IGNORECASE,
+)
+# anthropic-auth-token: <value> (alternative auth header)
+_ANTHROPIC_AUTH_RE = re.compile(
+    r"(\banthropic-auth-token\s*:\s*)([^\s'\"]+)",
+    re.IGNORECASE,
+)
 
 
 def _redact_sensitive_substrings(message: str) -> str:
     """Remove obvious API tokens and secrets before JSON log line emission."""
     text = _TELEGRAM_BOT_RE.sub(r"\1bot<redacted>\3", message)
-    return _AUTH_BEARER_RE.sub(r"\1<redacted>", text)
+    text = _AUTH_BEARER_RE.sub(r"\1<redacted>", text)
+    text = _API_KEY_RE.sub(r"\1<redacted>", text)
+    text = _ANTHROPIC_AUTH_RE.sub(r"\1<redacted>", text)
+    return text
 
 
 def _serialize_with_context(record) -> str:

@@ -31,8 +31,6 @@ async def iter_sse_events(response: httpx.Response) -> AsyncIterator[str]:
         if event_lines:
             yield "\n".join(event_lines) + "\n\n"
             event_lines.clear()
-    if event_lines:
-        yield "\n".join(event_lines) + "\n\n"
 
 
 class AnthropicMessagesStreamAdapter:
