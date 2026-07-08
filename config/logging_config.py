@@ -34,9 +34,14 @@ _TELEGRAM_BOT_RE = re.compile(
     r"(https?://api\.telegram\.org/)bot([0-9]+:[A-Za-z0-9_-]+)(/?)",
     re.IGNORECASE,
 )
-# Authorization: Bearer <token> (HTTP client / proxy debug lines)
+# Authorization: Bearer or Basic <token> (HTTP client / proxy debug lines)
 _AUTH_BEARER_RE = re.compile(
-    r"(\bAuthorization\s*:\s*Bearer\s+)([^\s'\"]+)",
+    r"(\bAuthorization\s*:\s*(?:Bearer|Basic)\s+)([^\s'\"]+)",
+    re.IGNORECASE,
+)
+# Cookie: <value> (session tokens carried in Cookie header)
+_COOKIE_RE = re.compile(
+    r"(\bCookie\s*:\s*)([^\n]+)",
     re.IGNORECASE,
 )
 # X-API-Key: <value> (proxy API key header)
@@ -55,6 +60,7 @@ def _redact_sensitive_substrings(message: str) -> str:
     """Remove obvious API tokens and secrets before JSON log line emission."""
     text = _TELEGRAM_BOT_RE.sub(r"\1bot<redacted>\3", message)
     text = _AUTH_BEARER_RE.sub(r"\1<redacted>", text)
+    text = _COOKIE_RE.sub(r"\1<redacted>", text)
     text = _API_KEY_RE.sub(r"\1<redacted>", text)
     text = _ANTHROPIC_AUTH_RE.sub(r"\1<redacted>", text)
     return text
