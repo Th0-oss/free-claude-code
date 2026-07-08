@@ -109,7 +109,7 @@ The watchdog uses two layers:
 
 - **Primary loop**: internal 10-second polling in the watchdog script — near-instant
   detection and relaunch when tasks finish.
-- **Systemd timer**: every 5 minutes — safety net for boot/resume; the 30-second loop
+- **Systemd timer**: every 5 minutes — safety net for boot/resume; the 10-second loop
   is the active driver during normal operation.
 
 **Relaunch logic — zero-gap when tasks finish:**
@@ -126,7 +126,7 @@ The watchdog uses two layers:
   (prior session crashed or was killed).
 - Claude then scans for authorized work and creates tasks as needed.
 - If nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
-  watchdog continues its 30-second monitoring rhythm.
+  watchdog continues its 10-second monitoring rhythm.
 - The watchdog **never ceases monitoring**. It keeps polling every 10 seconds and will
   relaunch/re-monitor indefinitely — 24/7/365.
 - There is **no API call quota** between watchdog cycles.

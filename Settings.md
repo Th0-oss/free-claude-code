@@ -73,7 +73,7 @@ The watchdog guarantees **instant relaunch** when tasks finish — no waiting.
   - Lock age ≥ 10s (or absent) → no session → **IMMEDIATELY relaunch**.
   - Stale lock threshold: 30 seconds — if lock is older, it's forcibly removed.
 - **Zero-gap**: when Claude finishes all tasks and exits, the lock is released.
-  The watchdog detects this within 30 seconds and relaunches. There is no idle gap.
+  The watchdog detects this within 10 seconds and relaunches. There is no idle gap.
 - **Never idle**: the watchdog never sleeps beyond 10 seconds. It keeps the loop
   alive 24/7/365 even when no work is visible — Claude will scan and create tasks.
 
