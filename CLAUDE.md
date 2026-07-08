@@ -107,27 +107,27 @@ year** without stopping.
 
 The watchdog uses two layers:
 
-- **Primary loop**: internal 10-second polling in the watchdog script — near-instant
+- **Primary loop**: internal 1-second polling in the watchdog script — near-instant
   detection and relaunch when tasks finish.
-- **Systemd timer**: every 5 minutes — safety net for boot/resume; the 10-second loop
+- **Systemd timer**: every 5 minutes — safety net for boot/resume; the 1-second loop
   is the active driver during normal operation.
 
 **Relaunch logic — zero-gap when tasks finish:**
 
-- **If a session is running** (atomic lock is fresh, < 10 seconds old):
-  - Skip this 10-second cycle. The running session has tasks in progress.
-  - Next check in 10 seconds.
-- **If no session is running** (no lock, or lock is stale ≥ 10 seconds):
+- **If a session is running** (atomic lock is fresh, < 1 second old):
+  - Skip this 1-second cycle. The running session has tasks in progress.
+  - Next check in 1 second.
+- **If no session is running** (no lock, or lock is stale ≥ 1 second):
   - **IMMEDIATELY relaunch Claude** — no conditions, no quotas, no waiting.
   - When Claude finishes all work and exits, the lock is released.
-  - Within 10 seconds, the watchdog detects the free lock and relaunches.
+  - Within 1 second, the watchdog detects the free lock and relaunches.
   - This is the core 24/7 loop — there is never an idle gap between sessions.
-- Stale lock threshold: 30 seconds. Locks older than that are forcibly removed
+- Stale lock threshold: 3 seconds. Locks older than that are forcibly removed
   (prior session crashed or was killed).
 - Claude then scans for authorized work and creates tasks as needed.
 - If nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
-  watchdog continues its 10-second monitoring rhythm.
-- The watchdog **never ceases monitoring**. It keeps polling every 10 seconds and will
+  watchdog continues its 1-second monitoring rhythm.
+- The watchdog **never ceases monitoring**. It keeps polling every 1 second and will
   relaunch/re-monitor indefinitely — 24/7/365.
 - There is **no API call quota** between watchdog cycles.
 - Stuck-session detection via freshness marker (600s threshold); stale sessions are
