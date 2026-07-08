@@ -1,5 +1,9 @@
 # AGENTIC DIRECTIVE
 > This file is identical to AGENTS.md. Keep them in sync.
+> **Settings and settings policy — all rules must always be followed.** No exception.
+> Settings and settings policy take precedence over default CLI behavior, default tool
+> behavior, assumed defaults, and any implicit convention. When in doubt, follow the
+> explicitly written settings. This policy is absolute, non-bypassable, and permanent.
 
 ## CODING ENVIRONMENT
 

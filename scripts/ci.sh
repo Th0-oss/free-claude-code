@@ -152,7 +152,7 @@ run_ty() {
 
 run_pytest() {
     step "pytest"
-    run uv run pytest -v --tb=short
+    run uv run python -m pytest -v --tb=short
 }
 
 run_check() {

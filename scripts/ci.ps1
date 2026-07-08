@@ -31,7 +31,7 @@ Checks (in order):
   ruff-format    uv run ruff format
   ruff-check     uv run ruff check --fix
   ty             uv run ty check
-  pytest         uv run pytest -v --tb=short
+  pytest         uv run python -m pytest -v --tb=short
 
 Options:
   -Only ID              Run only the given check (repeatable)
@@ -162,7 +162,7 @@ function Invoke-TyCheck {
 
 function Invoke-PytestCheck {
     Write-Step "pytest"
-    Invoke-CiCommand -FilePath "uv" -Arguments @("run", "pytest", "-v", "--tb=short")
+    Invoke-CiCommand -FilePath "uv" -Arguments @("run", "python", "-m", "pytest", "-v", "--tb=short")
 }
 
 function Invoke-Check {
