@@ -69,7 +69,7 @@ def test_ci_sh_runs_ci_checks_in_order() -> None:
     assert "uv run ruff format --check" not in text
     assert "uv run ruff check --fix" in text
     assert "uv run ty check" in text
-    assert "uv run pytest -v --tb=short" in text
+    assert "uv run python -m pytest -v --tb=short" in text
     assert "--only" in text
     assert "--skip" in text
     assert "--dry-run" in text
@@ -96,7 +96,7 @@ def test_ci_sh_dry_run_does_not_require_uv() -> None:
     )
 
     assert result.returncode == 0
-    assert "+ uv run pytest -v --tb=short" in result.stdout
+    assert "+ uv run python -m pytest -v --tb=short" in result.stdout
     assert "uv is required" not in result.stderr
 
 
@@ -222,7 +222,7 @@ def test_ci_ps1_dry_run_does_not_require_uv() -> None:
     )
 
     assert result.returncode == 0
-    assert "+ uv run pytest -v --tb=short" in result.stdout
+    assert "+ uv run python -m pytest -v --tb=short" in result.stdout
     assert "uv is required" not in result.stderr
 
 
