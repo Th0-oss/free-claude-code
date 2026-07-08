@@ -99,19 +99,32 @@ multi-agent workflows, and parallel orchestration whenever it improves the work.
 
 ## 24/7 WATCHDOG AND CONTINUOUS OPERATION
 
-### Watchdog Direct Relaunch
+### Watchdog — 24/7/365 Monitor and Relaunch
 
-The systemd watchdog (`claude-watchdog.service` / `.timer`) provides real 24/7/365
-persistence across sessions and reboots. Every 20 minutes it relaunches a fresh Claude
-instance. There is **no API call quota** between watchdog cycles — relaunch always happens
-as long as the atomic lock is free (or stale > 7200 seconds).
+The systemd watchdog (`claude-watchdog.service` / `.timer`) is the persistence backbone
+of the entire autonomous operation. It runs **24 hours a day, 7 days a week, 365 days a
+year** without stopping.
 
-On each launch, Claude:
-1. Reads `SettingsPolicy.md Section 5` and `MEMORY.md`.
-2. Reconstructs the exact task state from the cutoff image protocol.
-3. Continues from the last known task — no progress is lost.
-4. Creates new tasks (`TaskCreate`) whenever authorized work is identified.
-5. Does NOT idle when tasks remain: immediately proceeds to the next authorized item.
+The watchdog runs every **5 minutes** via systemd timer (persistent across reboots and
+sessions).
+
+**Relaunch logic:**
+- **If a session is running** (atomic lock is fresh, < 5 minutes old):
+  - Skip this cycle. The running session has tasks in progress.
+  - Next watchdog cycle in 5 minutes will check again.
+- **If no session is running** (no lock, or lock is stale > 5 minutes):
+  - **ALWAYS relaunch Claude immediately**, regardless of task state.
+  - Even if everything is idle, the watchdog keeps the loop alive.
+- When Claude finishes all work and exits, the lock is released.
+- The next cycle (5 minutes later) detects the free lock and relaunches Claude.
+- Claude then scans for authorized work and creates tasks as needed.
+- If nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
+  watchdog continues its 5-minute monitoring rhythm.
+- The watchdog **never ceases monitoring**. It keeps polling every 5 minutes and will
+  relaunch/re-monitor indefinitely — 24/7/365.
+- There is **no API call quota** between watchdog cycles.
+- Stuck-session detection via freshness marker (600s threshold); stale sessions are
+  force-cleaned and relaunched.
 
 ### Auto-Create / Auto-Recreate Tasks
 

@@ -60,14 +60,18 @@ The systemd watchdog provides real 24/7/365 persistence:
   Dangerous or irreversible actions remain in the confirmation queue and are escalated
   to the user.
 
-### 2.1 Watchdog Behavior on Cutoff
+### 2.1 Watchdog Behavior — Relaunch Logic
 
-When a Claude session is cut off:
-1. The watchdog lock is released by the session's EXIT trap, or removed if stale.
-2. On next 20-minute cycle, watchdog relaunches a fresh Claude instance.
-3. The new instance reads `SettingsPolicy.md Section 5` and reconstructs state from
-   `MEMORY.md`.
-4. Work continues from the last known task state — no progress is lost.
+- **Timer**: every 5 minutes.
+- **If a session is running** (lock fresh < 5 min): skip this cycle. Running session
+  handles tasks; next check in 5 min.
+- **If no session is running** (no lock, or stale lock > 5 min): ALWAYS relaunch
+  Claude immediately. This is the 24/7 loop — it never stops, never waits.
+- When Claude finishes work and exits, the lock is released. Next cycle (5 min later)
+  detects free lock and relaunches.
+- Claude scans for authorized work, creates tasks, or idle-sleeps. The watchdog
+  continues monitoring regardless.
+- This loop runs indefinitely: 24 hours a day, 7 days a week, 365 days a year.
 
 ### 2.2 Automatic Task Continuation
 

@@ -120,17 +120,33 @@ Claude must never halt mid-task, never wait for confirmation before completing
 authorized work, and never abandon a task due to a transient error. A session cutoff or
 context limit is not a reason to defer or abandon mandated work.
 
-### 5.2 Watchdog Direct Relaunch
+### 5.2 Watchdog — 24/7/365 Monitor and Relaunch
 
-The systemd watchdog (`claude-watchdog.service` / `.timer`) MUST relaunch a Claude
-instance on every cycle without waiting for conditions. There is no API call quota
-limit between watchdog cycles. The watchdog:
+The systemd watchdog (`claude-watchdog.service` / `.timer`) is the persistence backbone
+of the entire autonomous operation. It runs **24 hours a day, 7 days a week, 365 days a
+year** without stopping.
 
-- Runs every 20 minutes via systemd timer (persistent across reboots and sessions).
+The watchdog:
+
+- Runs **every 5 minutes** via systemd timer (persistent across reboots and sessions).
 - Uses an atomic filesystem lock to prevent overlapping Claude sessions.
-- Relaunches Claude with a fresh autonomous-loop prompt on every eligible cycle.
-- Detects stuck prior sessions via a freshness marker file; if stale, removes the lock
-  and proceeds with relaunch.
+- **If a session is already running** (lock is fresh, < 5 minutes old):
+  - Skips this cycle silently. The running session handles tasks.
+  - Next cycle in 5 minutes will check again.
+- **If no session is running** (no lock, or stale lock > 5 minutes):
+  - **ALWAYS relaunches Claude immediately**, regardless of whether tasks are pending,
+    idle, or anything else.
+  - This is the core 24/7 loop — it never stops, never waits for a "good moment."
+- When Claude finishes all its work and exits, the lock is released.
+- The next watchdog cycle (5 minutes later) detects the free lock and relaunches Claude.
+- Claude then scans for authorized work (lint, tests, dead code, TODOs, audit findings)
+  and creates tasks as needed.
+- If truly nothing needs doing, Claude idle-sleeps (up to 30 min via `/loop`) and the
+  watchdog continues its 5-minute monitoring rhythm.
+- The watchdog never ceases monitoring. Even when everything is idle, it keeps polling
+  every 5 minutes and will relaunch/re-monitor indefinitely.
+- Detects stuck prior sessions via a freshness marker file (600s threshold); if stale,
+  removes the lock and proceeds with relaunch.
 - Does **not** throttle, delay, or skip relaunch based on prior API usage.
 
 ### 5.3 Auto-Resumption After Cutoff
@@ -277,7 +293,50 @@ When multiple tasks compete for attention:
 
 ---
 
-## 6. MULTI-SESSION OPERATION
+## 6. CONTINUOUS LEARNING — SESSION AND PROMPT KNOWLEDGE INJECTION
+
+Claude must treat every prompt, every session, and every operational event as a source of
+learning. Rules, settings, and behaviors must evolve continuously based on what is
+observed, requested, or corrected during operation.
+
+### 6.1 Prompt-Level Learning
+
+Each user prompt is an opportunity to extract a new rule, parameter, preference, or
+correction. Claude must:
+
+- Identify any implicit or explicit instruction that is not yet codified in a settings
+  file.
+- Immediately inject it into the appropriate file: `Settings.md`, `SettingsPolicy.md`,
+  `AGENTS.md`, `CLAUDE.md`, or related configuration.
+- Commit and push the change in the same iteration if it affects a domain-owned file.
+- If the instruction is ambiguous, ask for clarification — but still record the resolved
+  interpretation in settings afterward.
+
+### 6.2 Session-Level Learning
+
+At the end of each session (or before a context-switch within a loop iteration), Claude
+must review the session's trajectory and update settings where the session revealed:
+
+- A gap in existing rules (e.g., a scenario not covered).
+- A correction to an outdated rule (e.g., a limit or preference that changed).
+- A new pattern that should become a standing rule (e.g., a recurring fix strategy).
+- A security, stability, or reliability insight that should be hardcoded.
+
+All session-level learnings are written to SettingsPolicy.md and/or Settings.md and
+propagated to AGENTS.md/CLAUDE.md and the Theo mirror in the same commit.
+
+### 6.3 Proactive Rule Hygiene
+
+Claude must continuously audit settings files for:
+
+- Contradictions between Settings.md, SettingsPolicy.md, AGENTS.md, CLAUDE.md.
+- Stale rules that no longer reflect current operational reality.
+- Missing rules for scenarios encountered in practice but not documented.
+- Opportunities to compress or simplify without losing semantic content.
+
+---
+
+## 7. MULTI-SESSION OPERATION
 
 Multiple Claude Code sessions may run concurrently across different terminals,
 environments, or processes. All sessions share the exact same authoritative
@@ -298,7 +357,7 @@ settings and rules at all times.
 
 ---
 
-## 7. MINIMIZATION OF EXTERNAL CALLS AND API PRESSURE
+## 8. MINIMIZATION OF EXTERNAL CALLS AND API PRESSURE
 
 To avoid rate-limiting, browser/IP blocks, or related API overload from excessive
 parallelism (not from watchdog frequency — watchdog is exempt from any quota):
@@ -317,7 +376,7 @@ parallelism (not from watchdog frequency — watchdog is exempt from any quota):
 
 ---
 
-## 7. FAILURE IS NOT AN OPTION (ABSOLUTE RULE)
+## 9. FAILURE IS NOT AN OPTION (ABSOLUTE RULE)
 
 - **Failure does not exist** in any file, on this machine, or in any output produced.
 - Every action, command, task, write, edit, commit, push, and operation must succeed.
@@ -331,7 +390,7 @@ parallelism (not from watchdog frequency — watchdog is exempt from any quota):
 
 ---
 
-## 8. SUMMARY STANDARDS
+## 10. SUMMARY STANDARDS
 
 Summaries must be technical and granular. Include:
 
@@ -342,7 +401,7 @@ Summaries must be technical and granular. Include:
 
 ---
 
-## 9. COMMIT CONVENTIONS
+## 11. COMMIT CONVENTIONS
 
 - End git commit messages with:
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
